@@ -4,6 +4,7 @@ import subprocess
 import sys
 import textwrap
 import time
+import types
 
 import pytest
 
@@ -93,3 +94,28 @@ def test_a_new_pool_reaps_tasks_left_running(tmp_path, case, rows, expected):
 
     with app.app_context():
         assert [db.session.get(Task, i).status for i in ids] == expected
+
+
+def test_a_dead_worker_is_replaced_and_its_task_reaped(tmp_path, monkeypatch):
+    """A worker killed outright (OOM mid-compression) must not leave its task running forever."""
+    app = create_app(f"sqlite:///{tmp_path/'test.db'}")
+    with app.app_context():
+        db.create_all()
+    pool = WorkerPool(app, initial_count=0)
+    with app.app_context():
+        task = Task(task_name="process_file", status="running", worker_id=1,
+                    input_json="{}", input_hash="0")
+        db.session.add(task)
+        db.session.commit()
+        task_id = task.id
+    dead = types.SimpleNamespace(is_alive=lambda: False, exitcode=-9,
+                                 terminate=lambda: None, join=lambda timeout=None: None)
+    pool.workers[1] = (dead, None)
+    started = []
+    monkeypatch.setattr(pool, "_start_worker", lambda worker_id=None: started.append(worker_id))
+
+    pool._replace_dead_workers()
+
+    assert started == [1]
+    with app.app_context():
+        assert db.session.get(Task, task_id).status == "failed"

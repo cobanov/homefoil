@@ -327,6 +327,10 @@ class User(UserMixin, db.Model):
     def is_admin(self):
         return self.admin_access
 
+    def get_id(self):
+        # The hash fragment ends sessions on a password change, and when SQLite reuses a deleted user's id.
+        return f'{self.id}:{self.password[-16:]}'
+
     def has_shop_access(self):
         return self.shop_access
 
@@ -473,7 +477,8 @@ def get_file_from_db(file_id):
     return Files.query.filter_by(id=file_id).first()
 
 def create_file(library_id, filepath, file_info):
-    """Insert a Files row from an already-fetched file_info dict. Returns the new row."""
+    """Insert a Files row from an already-fetched file_info dict. Returns the new row, or None
+    when the path is already in the database (the watcher and a scan both found it)."""
     new_file = Files(
         filepath=filepath,
         library_id=library_id,
@@ -485,7 +490,12 @@ def create_file(library_id, filepath, file_info):
         compressed=file_info["compressed"],
     )
     db.session.add(new_file)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        logger.info(f"File '{filepath}' is already in the database, not adding it again.")
+        return None
     return new_file
 
 
@@ -760,9 +770,32 @@ def delete_file_by_filepath(filepath):
         db.session.rollback()
         logger.error(f"An error occurred while removing the file path: {str(e)}")
 
+def _has_entries(path):
+    try:
+        with os.scandir(path) as entries:
+            return next(entries, None) is not None
+    except OSError:
+        return False
+
+def _gone(path):
+    """Really not there: a folder Ownfoil lost permission to read is not a folder of deleted files."""
+    try:
+        os.stat(path)
+    except (FileNotFoundError, NotADirectoryError):
+        return True
+    except OSError:
+        return False
+    return False
+
 def remove_missing_files_from_db():
-    """Bulk-delete Files rows whose path no longer exists on disk; recompute affected app ownership."""
-    missing = [f for f in Files.query.all() if not os.path.exists(f.filepath)]
+    """Bulk-delete Files rows whose path no longer exists on disk; recompute affected app ownership.
+
+    A library whose root is missing or empty is skipped: that is an unmounted disk, not a
+    library whose every file was deleted.
+    """
+    mounted = {lib.id for lib in Libraries.query.all() if _has_entries(lib.path)}
+    missing = [f for f in Files.query.all()
+               if f.library_id in mounted and _gone(f.filepath)]
     if not missing:
         return
     affected_apps = {a for f in missing for a in f.apps}

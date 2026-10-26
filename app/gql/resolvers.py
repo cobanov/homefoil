@@ -758,11 +758,15 @@ def resolve_title(title_id: str, ctx: GraphQLContext, info) -> Optional[Title]:
     return title
 
 
-def _title_id_type(id_sql: str) -> str:
-    """SQL for a title id's AppType: an odd 13th digit is DLC, `000` suffix BASE, `800` UPDATE."""
+def _title_id_type(id_sql: str, identified: bool = False) -> str:
+    """SQL for a title id's AppType: an odd 13th digit is DLC, `000` suffix BASE, `800` UPDATE.
+
+    `identified` ids come from the library, which already read the kind off the file, so
+    the odd-digit rule is skipped there: homebrew games have odd 13th digits too."""
     even = f"upper(substr({id_sql}, 13, 1)) IN ('0','2','4','6','8','A','C','E')"
+    odd_is_dlc = "" if identified else f"WHEN NOT {even} THEN '{APP_TYPE_DLC}'"
     return f"""(CASE
-        WHEN NOT {even} THEN '{APP_TYPE_DLC}'
+        {odd_is_dlc}
         WHEN substr({id_sql}, 14) = '000' THEN '{APP_TYPE_BASE}'
         WHEN substr({id_sql}, 14) = '800' THEN '{APP_TYPE_UPD}'
         ELSE '{APP_TYPE_DLC}' END)"""
@@ -826,7 +830,7 @@ def resolve_titles(*, owned: Optional[bool], filter: Optional[TitleFilter],
         # Owned, the library drives and a title titledb never heard of has no td.id.
         id_sql = "ot.title_id" if owned is True else "td.id"
         params.update({f"tt_{i}": t.value for i, t in enumerate(app_type)})
-        where.append(f"{_title_id_type(id_sql)} IN "
+        where.append(f"{_title_id_type(id_sql, identified=owned is True)} IN "
                      f"({','.join(f':tt_{i}' for i in range(len(app_type)))})")
     if search:
         params["search"] = f"%{search}%"

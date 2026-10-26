@@ -4,7 +4,7 @@ Tinfoil client implementation.
 from flask import Request, Response, jsonify
 from typing import Tuple, Optional, Dict, Any
 import json
-import random
+import os
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP, AES
 from Crypto.Hash import SHA256
@@ -161,7 +161,7 @@ class TinfoilClient(BaseClient):
         input_data = json.dumps(shop).encode('utf-8')
 
         # Random 128-bit AES key (16 bytes), used later for symmetric encryption (AES)
-        aes_key = random.randint(0, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF).to_bytes(0x10, 'big')
+        aes_key = os.urandom(0x10)
 
         # Zstandard compression
         flag = 0xFD

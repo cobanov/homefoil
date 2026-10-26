@@ -34,6 +34,12 @@ sys.argv = sys.argv[:1]
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def no_login_failure_delay(monkeypatch):
+    """A failed login sleeps to slow password guessing, and the suite fails logins on purpose."""
+    monkeypatch.setattr("auth.LOGIN_FAILURE_DELAY", 0)
+
+
 @pytest.fixture
 def shop_app(tmp_path, monkeypatch):
     """The real app object, on an empty database and the capture harness' fixture library.

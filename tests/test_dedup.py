@@ -119,10 +119,10 @@ def test_deleting_a_duplicate_removes_the_file_and_its_row(env):
     assert env.apps["A"].owned
 
 
-def seed_updates(env):
+def seed_updates(env, newest=None):
     """An older and a newer owned update of the same title: old.nsp (U) and new.nsp (V)."""
     old = env.seed("old.nsp", "U", {})
-    env.seed("new.nsp", "V", {})
+    env.seed("new.nsp", "V", newest or {})
     for letter, version in (("U", "65536"), ("V", "131072")):
         app = env.apps[letter]
         app.app_id, app.app_version, app.app_type = "0100000000010800", version, "UPDATE"
@@ -147,6 +147,14 @@ def test_outdated_update_groups_keep_the_newest_update(env):
               for app_pk, keep, remove in outdated_update_groups()]
 
     assert groups == [(env.apps["V"].id, ["new.nsp"], ["old.nsp"])]
+
+
+@pytest.mark.parametrize("newest", [CORRUPT, {"missing": True}, {"identification_type": "filename"}],
+                         ids=["corrupt", "missing from disk", "identified from its filename"])
+def test_older_updates_stay_while_the_newest_is_unsound(env, newest):
+    seed_updates(env, newest)
+
+    assert outdated_update_groups() == []
 
 
 # (case, files, prefer_multicontent, {app letter: (name kept, names deleted)})

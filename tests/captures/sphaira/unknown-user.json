@@ -87,7 +87,7 @@
         ],
         "body": {
           "kind": "text",
-          "text": "<!DOCTYPE html>\n<html>\n<body>\n<table>\n<a href=\"00 - ERROR\"> </a>\n<a href=\"01 - Shop requires authentication.\"> </a>\n<a href=\"02 - Unknown user ghost.\"> </a>\n</table>\n</body>\n</html>"
+          "text": "<!DOCTYPE html>\n<html>\n<body>\n<table>\n<a href=\"00 - ERROR\"> </a>\n<a href=\"01 - Shop requires authentication.\"> </a>\n<a href=\"02 - Invalid username or password.\"> </a>\n</table>\n</body>\n</html>"
         }
       },
       "downloads": {},

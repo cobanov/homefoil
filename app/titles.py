@@ -24,7 +24,12 @@ get_all_existing_dlc = titledb.store.get_all_existing_dlc
 get_all_dlc_versions = titledb.store.get_all_dlc_versions
 
 def get_dirs_and_files(path):
-    entries = os.listdir(path)
+    try:
+        entries = os.listdir(path)
+    except OSError as e:
+        # One unreadable folder (a root-owned lost+found) must not abort the whole scan.
+        logger.warning(f'Skipping unreadable directory {path}: {e}')
+        return [], []
     all_files = []
     all_dirs = []
 

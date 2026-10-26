@@ -142,7 +142,7 @@ def error_of(response):
     """The refusal a shop response carries, in the client's own format."""
     if response.mimetype == "text/html":
         # Sphaira has nowhere to put an error but the listing, so it numbers the lines:
-        # "00 - ERROR", "01 - Shop requires authentication.", "02 - Unknown user ghost."
+        # "00 - ERROR", "01 - Shop requires authentication.", "02 - Invalid username or password."
         return "\n".join(item.split(" - ", 1)[1] for item in listed(response)[1:])
     return response.get_json()["error"]
 
@@ -292,8 +292,9 @@ def test_an_authorized_account_gets_the_listing(shop, client, name):
 
 REFUSALS = {
     "private-no-credentials": "Shop requires authentication.\nNo authentication provided.",
-    "unknown-user": "Shop requires authentication.\nUnknown user ghost.",
-    "wrong-password": "Shop requires authentication.\nIncorrect password for user shopper.",
+    # One message for both, so a refusal does not say which accounts exist.
+    "unknown-user": "Shop requires authentication.\nInvalid username or password.",
+    "wrong-password": "Shop requires authentication.\nInvalid username or password.",
     "no-shop-access": "User noshop does not have access to the shop.",
     "client-disabled": "Shop access from {client} is disabled.",
 }

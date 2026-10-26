@@ -257,8 +257,8 @@ def _write(kind, size, filename, data):
     directory = media_dir(kind, size)
     os.makedirs(directory, exist_ok=True)
     path = os.path.join(directory, filename)
-    # Per-thread temp file, so concurrent builds of one rendition don't share it.
-    tmp = f'{path}.{threading.get_ident()}.tmp'
+    # Per-process and per-thread temp file, so concurrent builds of one rendition don't share it.
+    tmp = f'{path}.{os.getpid()}.{threading.get_ident()}.tmp'
     with open(tmp, 'wb') as f:
         f.write(data)
     os.replace(tmp, path)

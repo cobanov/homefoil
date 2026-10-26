@@ -35,3 +35,19 @@ def test_scan_skips_dotfiles_but_walks_dotted_folders(tmp_path):
 
     assert dirs == [str(sub)]
     assert sorted(files) == [str(tmp_path / "Game.nsp"), str(sub / "Update.nsz")]
+
+
+def test_scan_skips_an_unreadable_folder(tmp_path, monkeypatch):
+    (tmp_path / "Game.nsp").write_bytes(b"x")
+    (tmp_path / "lost+found").mkdir()
+    listdir = titles.os.listdir
+
+    def guarded(path):
+        if path.endswith("lost+found"):
+            raise PermissionError(13, "Permission denied", path)
+        return listdir(path)
+    monkeypatch.setattr(titles.os, "listdir", guarded)
+
+    _, files = titles.get_dirs_and_files(str(tmp_path))
+
+    assert files == [str(tmp_path / "Game.nsp")]

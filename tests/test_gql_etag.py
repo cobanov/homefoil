@@ -9,6 +9,7 @@ update" badges for content the user now owns.
 Assertions are on the observable contract - 304 vs 200 - not on how the hash is built.
 """
 
+import datetime
 import json
 import types
 
@@ -18,8 +19,8 @@ import db as db_mod
 import titledb
 from app import create_app
 from constants import APP_TYPE_BASE, APP_TYPE_UPD
-from db import Apps, Files, Libraries, Task, Titles, db, init_db
-from gql import graphql_dispatch
+from db import Apps, Files, Libraries, Media, Task, Titles, db, init_db
+from gql import cache, graphql_dispatch
 
 
 ALPHA = "0100000000AAAAA0"[:16]
@@ -176,3 +177,31 @@ def test_a_304_still_carries_the_etag(library):
 
     assert not_modified.status_code == 304
     assert not_modified.headers["ETag"] == etag
+
+
+def test_refetched_artwork_invalidates_the_cache(library):
+    """A re-fetch overwrites the slot's row in place, so only its timestamp moves."""
+    with library.app.app_context():
+        db.session.add(Media(title_id=ALPHA, kind="banner", position=0, source="url",
+                             filename="a.jpg"))
+        db.session.commit()
+    etag = fetch(library).headers["ETag"]
+
+    with library.app.app_context():
+        db.session.query(Media).update({"filename": "b.jpg",
+                                        "downloaded_at": datetime.datetime(2100, 1, 1)})
+        db.session.commit()
+
+    assert fetch(library, etag).status_code == 200
+
+
+def test_a_settings_change_invalidates_the_cache(library, tmp_path, monkeypatch):
+    """Settings shape answers (what the shop shows, which duplicate is kept) with no row changing."""
+    settings = tmp_path / "settings.yaml"
+    settings.write_text("shop: {public: false}\n")
+    monkeypatch.setattr(cache, "CONFIG_FILE", str(settings))
+    etag = fetch(library).headers["ETag"]
+
+    settings.write_text("shop: {public: true}\n")
+
+    assert fetch(library, etag).status_code == 200

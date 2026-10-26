@@ -44,6 +44,22 @@ def verify_password(pwhash, password):
         _verify_cache[key] = now + VERIFY_CACHE_TTL
     return True
 
+# Seconds added to every failed login, to slow password guessing.
+LOGIN_FAILURE_DELAY = 1
+# Verified against for an unknown user, so it costs the same scrypt as a wrong password.
+_DUMMY_HASH = 'scrypt:32768:8:1$l8iBxjfRse5QrvSS$466641c1ae37e19fd60ecd4c155b3f18162889eb392297ec844c1c68259f3753f58baa429cee2984cbf64fac8da638f99dcb98f21581af173a08e7755d0d2fd2'
+
+def check_credentials(username, password):
+    """The user these credentials belong to, else None after a fixed delay."""
+    password = password or ''
+    user = User.query.filter_by(user=username).first()
+    if user is not None and verify_password(user.password, password):
+        return user
+    if user is None:
+        check_password_hash(_DUMMY_HASH, password)
+    time.sleep(LOGIN_FAILURE_DELAY)
+    return None
+
 def validate_password(password):
     """
     Validate password according to Basic Auth specifications and Tinfoil compatibility.
@@ -173,16 +189,10 @@ def basic_auth(request):
         error = 'No authentication provided.'
         return success, error, user
 
-    username = auth.username
-    password = auth.password
-    user = User.query.filter_by(user=username).first()
+    user = check_credentials(auth.username, auth.password)
     if user is None:
         success = False
-        error = f'Unknown user {username}.'
-    
-    elif not verify_password(user.password, password):
-        success = False
-        error = f'Incorrect password for user {username}.'
+        error = 'Invalid username or password.'
 
     return success, error, user
 
@@ -288,12 +298,18 @@ def init_users(app):
         if os.environ.get('USER_GUEST_NAME') is not None:
             init_user_from_environment(environment_name="USER_GUEST", admin=False)
 
+def local_url(url):
+    """url if it is a path on this server, else '/': `next` must not send a login elsewhere."""
+    # Browsers drop tabs and newlines from a URL, so '/\t/evil.com' would read as '//evil.com'.
+    url = re.sub(r'[\t\r\n]', '', url)
+    return url if url.startswith('/') and not url.startswith(('//', '/\\')) else '/'
+
 @auth_blueprint.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
         next_url = request.args.get('next', '')
         if current_user.is_authenticated:
-            return redirect(next_url if len(next_url) else '/')
+            return redirect(local_url(next_url))
         return render_template('login.html', title='Login')
         
     # login code goes here
@@ -302,11 +318,8 @@ def login():
     remember = bool(request.form.get('remember'))
     next_url = request.form.get('next', '')
 
-    user = User.query.filter_by(user=username).first()
-
-    # check if the user actually exists
-    # take the user-supplied password, hash it, and compare it to the hashed password in the database
-    if not user or not verify_password(user.password, password):
+    user = check_credentials(username, password)
+    if not user:
         logger.warning(f'Incorrect login for user {username}')
         return redirect(url_for('auth.login')) # if the user doesn't exist or password is wrong, reload the page
 
@@ -314,7 +327,7 @@ def login():
     logger.info(f'Sucessfull login for user {username}')
     login_user(user, remember=remember)
 
-    return redirect(next_url if len(next_url) else '/')
+    return redirect(local_url(next_url))
 
 @auth_blueprint.route('/profile')
 @login_required
@@ -338,6 +351,10 @@ def delete_user():
     success = True
     data = request.json
     user_id = data['user_id']
+    user = User.query.filter_by(id=user_id).first()
+    if user and user.admin_access and admin_account_created() == 1:
+        # With no admin left, authentication switches off for everyone.
+        return jsonify({'success': False, 'error': 'Cannot delete the last admin account.'})
     try:
         User.query.filter_by(id=user_id).delete()
         db.session.commit()

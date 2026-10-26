@@ -296,6 +296,7 @@
 </dialog>
 
 <script src="{{ url_for('static', filename='js/format.js') }}"></script>
+<script src="{{ url_for('static', filename='js/store.js') }}"></script>
 <script>
     const TITLE_ID = {{ title_id|tojson }};
     const SHOP_NAME = {{ shop_name|tojson }};
@@ -325,18 +326,6 @@
     let title = null;
     let shot = 0;
 
-    async function gqlFetch(query, variables) {
-        const params = new URLSearchParams({query, variables: JSON.stringify(variables)});
-        const r = await fetch('/api/graphql?' + params, {
-            headers: {'Accept': 'application/json'},
-            credentials: 'same-origin',
-        });
-        if (!r.ok) throw new Error(`GraphQL HTTP ${r.status}`);
-        const body = await r.json();
-        if (body.errors && body.errors.length) throw new Error(JSON.stringify(body.errors));
-        return body.data;
-    }
-
     // Everything shown comes from titledb or the filesystem, so it all goes in as text.
     function el(tag, attrs = {}, ...children) {
         const node = document.createElement(tag);
@@ -348,24 +337,17 @@
         return node;
     }
 
-    const LATIN = /^[\p{Script=Latin}\p{N}\p{P}\p{Zs}\p{S}]+$/u;
-    const cleanName = name => (name || 'Unrecognized title').replace(/[™®]/g, '').replace(/\s{2,}/g, ' ').trim();
-
     function formatDate(value) {
         const s = String(value || '');
         const iso = /^\d{8}$/.test(s) ? `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6)}` : s.slice(0, 10);
         const d = new Date(iso);
-        return isNaN(d) ? '' : d.toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric'});
+        // The date parses as UTC midnight; read it back in UTC or it is a day early west of Greenwich.
+        return isNaN(d) ? '' : d.toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC'});
     }
 
     /** Nintendo numbers updates in steps of 65536: 196608 is the third one. */
     function updateNumber(appVersion) {
         return appVersion % 65536 === 0 ? appVersion / 65536 : appVersion;
-    }
-
-    function playersLabel(p) {
-        if (!p) return '';
-        return p === '1' ? '1 player' : `${p.replace(/\s*[-~]\s*/, '–')} players`;
     }
 
     const totalSize = files => (files || []).reduce((sum, f) => sum + Number(f.size || 0), 0);
@@ -377,7 +359,9 @@
         const dlcById = new Map();
         apps.filter(a => a.appType === 'DLC').forEach(a => {
             const seen = dlcById.get(a.appId);
-            if (!seen || a.appVersion > seen.appVersion || (a.owned && !seen.owned)) dlcById.set(a.appId, a);
+            const newest = !seen || a.appVersion > seen.appVersion ? a : seen;
+            // Any version of a DLC in the library counts as owning it.
+            dlcById.set(a.appId, {...newest, owned: a.owned || !!(seen && seen.owned)});
         });
         const dlc = [...dlcById.values()].sort((a, b) =>
             ((a.titledb || {}).name || a.appId).localeCompare((b.titledb || {}).name || b.appId));
@@ -489,6 +473,8 @@
             info.append(all);
         }
         fitDescription();
+        // Measured again once Archivo is in: the fallback font can fit text that Archivo cuts.
+        document.fonts.ready.then(fitDescription);
     }
 
     /** Whether the description had to give up lines, which decides the fade and whether

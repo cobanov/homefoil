@@ -365,8 +365,10 @@
                 </div>`;
             const slot = col.querySelector('.worker-task');
             if (task) {
-                slot.innerHTML = `<div class="fw-semibold">${task.displayName}</div>
-                    <div class="text-secondary small">${taskMeta(task)}</div>`;
+                // Text, not markup: the name is a file name and the meta can carry an error message.
+                slot.innerHTML = '<div class="fw-semibold"></div><div class="text-secondary small"></div>';
+                slot.children[0].textContent = task.displayName;
+                slot.children[1].textContent = taskMeta(task);
             } else {
                 slot.innerHTML = '<span class="text-secondary fst-italic">Idle</span>';
             }

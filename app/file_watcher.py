@@ -255,7 +255,9 @@ class Handler(FileSystemEventHandler):
             # subdir-watch race) is walked once activity settles. Established subdirs and renames
             # within the tree emit reliable per-file events, so they need no walk here.
             src = source_event.src_path
-            is_root = src.rstrip('/') == directory.rstrip('/')
+            is_root = src.rstrip('/\\') == directory.rstrip('/\\')
+            if source_event.event_type == 'deleted' and is_root:
+                return  # the root going away is an unmount, not a removal of every game in it
             if source_event.event_type == 'deleted':
                 with self.dir_walk_lock:
                     self.new_dirs.pop(src, None)
@@ -285,7 +287,8 @@ class Handler(FileSystemEventHandler):
         # nothing can stat it). Treat a delete of a non-media entry as a possible folder removal
         # so a deleted game folder still prunes its files; on a plain file the prefix matches
         # nothing downstream. Other platforms deliver a real DirDeletedEvent above.
-        if sys.platform == 'win32' and source_event.event_type == 'deleted' and not is_media:
+        if (sys.platform == 'win32' and source_event.event_type == 'deleted' and not is_media
+                and source_event.src_path.rstrip('/\\') != directory.rstrip('/\\')):
             with self.dir_walk_lock:
                 self.new_dirs.pop(source_event.src_path, None)
             self._raw_callback([SimpleNamespace(type='dir_deleted', directory=directory,

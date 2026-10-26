@@ -675,7 +675,8 @@ def _scan_library_done(library_path, **kwargs):
 
 
 def _insert_file(library_path, library_id, filepath):
-    """Read file info from disk and insert a Files row. Returns the row, or None on failure."""
+    """Read file info from disk and insert a Files row. Returns the row, or None on failure or
+    when the path is already in the database."""
     file_display = filepath.replace(library_path, "").lstrip("/")
     logger.info(f'Getting file info: {file_display}')
     file_info = titles_lib.get_file_info(filepath)
@@ -694,6 +695,8 @@ def add_file_task(library_path, filepath, **kwargs):
 
     new_file = _insert_file(library_path, library_id, filepath)
     if new_file is None:
+        if file_exists_in_db(filepath):
+            return  # a scan inserted it meanwhile, and queued its processing
         raise ValueError(f'Failed to add file: {filepath}')
 
     enqueue_task('process_file', {'file_id': new_file.id})

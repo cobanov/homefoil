@@ -5,6 +5,8 @@ from multiprocessing import Process, Event as MPEvent
 
 logger = logging.getLogger('main')
 
+LIVENESS_INTERVAL = 5  # seconds between checks for a worker that died on its own
+
 
 class WorkerPool:
     """Manages a dynamic pool of task worker subprocesses."""
@@ -14,8 +16,24 @@ class WorkerPool:
         self.workers = {}  # worker_id -> (Process, MPEvent)
         self._lock = threading.Lock()
         self._next_id = 1
+        self._closed = threading.Event()
         self._reap_orphaned_tasks()
         self._scale_to(initial_count)
+        threading.Thread(target=self._watch, name='worker-liveness', daemon=True).start()
+
+    def _watch(self):
+        while not self._closed.wait(LIVENESS_INTERVAL):
+            self._replace_dead_workers()
+
+    def _replace_dead_workers(self):
+        """Replace a worker that died on its own (an OOM kill mid-compression): nothing else
+        would fail its task, which then holds its concurrency group forever."""
+        with self._lock:
+            for worker_id, (proc, _) in list(self.workers.items()):
+                if not proc.is_alive():
+                    logger.warning(f'Worker-{worker_id} died (exit code {proc.exitcode}), replacing it.')
+                    self._stop_worker(worker_id, force=True)  # reaps its task
+                    self._start_worker(worker_id=worker_id)
 
     def _reap_orphaned_tasks(self):
         """Fail tasks still marked running: a new pool has no workers yet, so they belong to a
@@ -92,6 +110,7 @@ class WorkerPool:
 
     def shutdown(self):
         """Stop all workers."""
+        self._closed.set()
         with self._lock:
             for wid in list(self.workers.keys()):
                 self._stop_worker(wid)

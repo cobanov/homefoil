@@ -193,13 +193,10 @@ def remove_library_complete(app, watcher, path):
 
 def init_libraries(app, watcher, paths):
     with app.app_context():
-        # delete non existing libraries
+        # Never removed here: a disk not mounted yet at boot would take every row with it.
         for library in get_libraries():
-            path = library.path
-            if not os.path.exists(path):
-                logger.warning(f"Library {path} no longer exists, deleting from database.")
-                # Use the complete removal function for consistency
-                remove_library_complete(app, watcher, path)
+            if not os.path.exists(library.path):
+                logger.warning(f"Library {library.path} does not exist, skipping it.")
 
         # add libraries and start watchdog
         for path in paths:
@@ -271,15 +268,23 @@ def add_missing_apps_to_db():
     logger.info(f'Finished adding missing apps to database. Total apps upserted: {total}')
 
 def outdated_update_groups():
-    """Per title with several owned updates: its newest update's Apps.id and files, and the
-    single-content files of its older updates."""
+    """Per title with several owned updates: its newest sound update's Apps.id and files, and
+    the single-content files of its older updates."""
+    import tasks as tasks_mod
+    from settings import get_settings
+    mgmt = get_settings()['library']['management']
+    is_pending = lambda f: tasks_mod._has_pending_stage(f, mgmt)
     groups = []
     for title in get_all_titles():
         updates = [a for a in title.apps if a.app_type == APP_TYPE_UPD]
         owned = [a for a in updates if a.owned]
         if len(owned) <= 1:
             continue
-        latest = max(owned, key=lambda a: int(a.app_version))
+        # The newest update only counts if a copy of it is sound: its older ones are deleted for it.
+        sound = [a for a in owned if any(_sound_copy(f, is_pending) for f in a.files)]
+        if not sound:
+            continue
+        latest = max(sound, key=lambda a: int(a.app_version))
         outdated = [f for a in updates if int(a.app_version) < int(latest.app_version)
                     for f in a.files if f.identified and not f.multicontent]
         if outdated:
@@ -303,6 +308,16 @@ def delete_library_file(file_obj):
         return
     delete_file_by_filepath(file_obj.filepath)
 
+def _settled(file, is_pending):
+    """Identified from its own cnmt with no pipeline stage left: the database knows all it carries."""
+    return file.identification_type == 'cnmt' and not is_pending(file)
+
+def _sound_copy(file, is_pending):
+    """A copy safe to delete others for: settled, intact and on disk."""
+    from containers.verification import STATUS_BROKEN
+    return (_settled(file, is_pending) and verification_status(file) not in STATUS_BROKEN
+            and os.path.exists(file.filepath))
+
 def duplicate_groups(prefer_multicontent, is_pending):
     """Per app losing a copy: its Apps.id, the copy kept, and its copies deleted - files whose
     every app has a better copy elsewhere.
@@ -316,7 +331,7 @@ def duplicate_groups(prefer_multicontent, is_pending):
     keep, judged = set(), {}
     for app_id, files in copies.items():
         best = best_file(files, prefer_multicontent)
-        if (len(files) > 1 and all(f.identification_type == 'cnmt' and not is_pending(f) for f in files)
+        if (len(files) > 1 and all(_settled(f, is_pending) for f in files)
                 and os.path.exists(best.filepath)):
             keep.add(best)
             judged[app_id] = best

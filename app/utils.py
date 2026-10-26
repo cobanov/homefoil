@@ -308,24 +308,14 @@ def delete_empty_folders(path):
         deleted_any_in_pass = False
         # Traverse from bottom up to ensure child empty folders are deleted first
         for dirpath, dirnames, filenames in os.walk(path, topdown=False):
-            # Check if the directory is truly empty (no subdirectories and no files)
-            if not dirnames and not filenames:
+            # Check if the directory is truly empty (no subdirectories and no files); never the root
+            if dirpath != path and not dirnames and not filenames:
                 try:
                     os.rmdir(dirpath)
                     logging.getLogger('main').debug(f"Deleted empty directory: {dirpath}")
                     deleted_any_in_pass = True
                 except OSError as e:
                     logging.getLogger('main').error(f"Error deleting directory {dirpath}: {e}")
-
-        # After a full pass, check if the root path itself is now empty and can be deleted
-        # This handles cases where the initial 'path' becomes empty after its children are removed
-        if not os.listdir(path) and os.path.isdir(path):
-            try:
-                os.rmdir(path)
-                logging.getLogger('main').debug(f"Deleted empty root directory: {path}")
-                deleted_any_in_pass = True
-            except OSError as e:
-                logging.getLogger('main').error(f"Error deleting root directory {path}: {e}")
 
         if not deleted_any_in_pass:
             break # No more empty directories found in this pass, so we are done

@@ -24,6 +24,7 @@ import realtime
 import titledb
 import os
 import secrets
+from urllib.parse import urlsplit
 from clients import CyberFoilClient, TinfoilClient, SphairaClient
 
 def init():
@@ -78,8 +79,9 @@ logging.getLogger('alembic.runtime.migration').setLevel(logging.WARNING)
 
 @login_manager.user_loader
 def load_user(user_id):
-    # since the user_id is just the primary key of our user table, use it in the query for the user
-    return User.query.filter_by(id=user_id).first()
+    # user_id is User.get_id(): the primary key and a password hash fragment, both must match
+    user = User.query.filter_by(id=user_id.partition(':')[0]).first()
+    return user if user and user.get_id() == user_id else None
 
 def on_settings_change():
     """Settings file changed: refresh cache, scale workers, and re-apply watcher config."""
@@ -164,6 +166,8 @@ def create_app(db_uri=None):
     app.config["SQLALCHEMY_DATABASE_URI"] = db_uri or OWNFOIL_DB
     app.config['SECRET_KEY'] = load_secret_key()
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['REMEMBER_COOKIE_SAMESITE'] = 'Lax'
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -187,6 +191,11 @@ import task_events  # noqa: F401 — registers the tasks/workers topics
 @sock.route('/api/ws')
 def realtime_ws(ws):
     """Multiplexed realtime stream: /api/ws?topics=tasks,workers"""
+    origin = request.headers.get('Origin')
+    # A foreign Origin is another site's page riding this browser's session cookie.
+    if origin and urlsplit(origin).netloc != request.host:
+        logger.warning(f'Refused realtime connection from origin {origin}')
+        return
     requested = [t for t in request.args.get('topics', '').split(',') if t]
     realtime.serve(ws, requested)
 
@@ -618,25 +627,32 @@ def upload_file():
     errors = []
     success = False
     valid_keys = None
+    # Validated beside keys.txt and swapped in only when valid, so a bad upload keeps the working keys.
+    upload_path = f'{KEYS_FILE}.upload'
     try:
         file = request.files['file']
         if file and allowed_file(file.filename):
             # filename = secure_filename(file.filename)
-            file.save(KEYS_FILE)
+            file.save(upload_path)
             logger.info(f'Validating {file.filename}...')
-            valid_keys, missing_keys, corrupt_keys = load_keys(KEYS_FILE)
+            valid_keys, missing_keys, corrupt_keys = load_keys(upload_path)
             if valid_keys:
+                os.replace(upload_path, KEYS_FILE)
                 tasks_mod.enqueue_task('process_library')
+                success = True
+                logger.info('Successfully saved keys.txt')
             else:
                 logger.warning(f'Invalid keys from {file.filename}')
-            success = True
-            logger.info('Successfully saved keys.txt')
+                errors.append('Invalid keys file, the current keys were kept.')
+                load_keys(KEYS_FILE)  # Reload the kept keys over the rejected ones
 
     except Exception as e:
         logger.error(f'Failed to upload console keys file: {e}')
-        os.remove(KEYS_FILE)
         success = False
         errors.append(str(e))
+    finally:
+        if os.path.exists(upload_path):
+            os.remove(upload_path)
 
     resp = {
         'success': success,

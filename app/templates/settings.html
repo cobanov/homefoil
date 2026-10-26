@@ -53,6 +53,7 @@
                         </tbody>
                     </table>
                 </div>
+                <div id="userTableFeedback" class="invalid-feedback"></div>
 
                 <p class="d-inline-flex gap-1">
                     <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
@@ -1013,7 +1014,10 @@
             contentType: "application/json",
             success: function (result) {
                 if (result['success']) {
+                    $('#userTableFeedback').text('').removeClass('d-block');
                     fillUserTable();
+                } else {
+                    $('#userTableFeedback').text(result['error']).addClass('d-block');
                 }
             }
         });

@@ -13,7 +13,9 @@ SUM here.
 """
 import hashlib
 import json
+import os
 
+from constants import CONFIG_FILE
 from db import db
 from sqlalchemy import text
 
@@ -40,7 +42,8 @@ SELECT * FROM
           COALESCE(SUM(worker_id), 0),
           SUM(CASE WHEN status = 'running' THEN 1 ELSE 0 END)
      FROM tasks),
-  (SELECT COUNT(*), COALESCE(MAX(id), 0) FROM media)
+  -- artwork re-fetched into an existing slot keeps its id; downloaded_at moves
+  (SELECT COUNT(*), COALESCE(MAX(id), 0), MAX(downloaded_at) FROM media)
 """
 
 
@@ -52,7 +55,7 @@ def _titledb_attached() -> bool:
 
 
 def world_hash() -> str:
-    """Return a short hex digest summarising library + titledb state."""
+    """Return a short hex digest summarising library, titledb and settings state."""
     row = db.session.execute(text(_WORLD_SQL)).first()
     parts = [str(x) for x in (row or [])]
     if _titledb_attached():
@@ -61,6 +64,12 @@ def world_hash() -> str:
         )).first()
         parts.append(meta[0] if meta else "")
     else:
+        parts.append("")
+    # Settings change what queries return (shop visibility, duplicate rules) without a row changing.
+    try:
+        stat = os.stat(CONFIG_FILE)
+        parts.append(f"{stat.st_mtime_ns}:{stat.st_size}")
+    except OSError:
         parts.append("")
     h = hashlib.md5("|".join(parts).encode()).hexdigest()
     return h[:16]

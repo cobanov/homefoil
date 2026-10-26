@@ -228,3 +228,15 @@ def test_the_owned_listing_reads_the_kind_off_its_own_id(catalogue):
             { items { titleId } } }""")
     # Alpha is owned too, but its id is shaped like a DLC's.
     assert [t["titleId"] for t in data["titles"]["items"]] == [unknown_game]
+
+
+def test_an_owned_homebrew_game_with_an_odd_13th_digit_is_a_game(catalogue):
+    """In titledb an odd 13th digit marks a DLC, but homebrew games pick their own ids:
+    the library already identified this one as a game, so it lists as one."""
+    homebrew = "01B7F96B70C31000"
+    _own_a_title_titledb_never_heard_of(catalogue, homebrew)
+
+    data = query(catalogue, """
+        query { titles(owned: true, appType: [BASE], page: 1, pageSize: 50)
+            { items { titleId } } }""")
+    assert [t["titleId"] for t in data["titles"]["items"]] == [homebrew]

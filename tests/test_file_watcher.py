@@ -445,3 +445,19 @@ def test_watcher_skips_disabled_path(monkeypatch, tmp_path):
         assert str(lib) not in w.scheduler_map
     finally:
         w.stop()
+
+
+@pytest.mark.parametrize("platform", ["linux", "win32"])
+def test_library_root_delete_is_ignored(tmp_path, monkeypatch, platform):
+    """The root itself vanishing is an unmount: a dir_deleted for it would drop every row."""
+    lib = tmp_path / "library"
+    lib.mkdir()
+
+    seen = []
+    h = _make_handler(lambda evs: seen.extend(evs))
+    h.add_directory(str(lib))
+
+    monkeypatch.setattr(file_watcher.sys, "platform", platform)
+    _feed(h, str(lib), event_type="deleted", is_directory=platform == "linux")
+
+    assert seen == []
