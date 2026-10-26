@@ -10,6 +10,12 @@
     --sx-font: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
     --sx-gutter: clamp(20px, 5vw, 72px);
     --sx-nav-h: 64px;
+    /* Three corners and a pill. Surfaces on the page take lg, what sits on a surface (art,
+       fields, notes, menus) takes md, small inline marks take sm; anything pressed is a pill. */
+    --sx-r-lg: 20px;
+    --sx-r: 12px;
+    --sx-r-sm: 6px;
+    --sx-red-text: #FF8A94;
 }
 
 /* Bootstrap's dark theme, retuned to the same palette so the admin pages match. */
@@ -27,7 +33,42 @@
     --bs-link-hover-color: #33D2EC;
     --bs-link-hover-color-rgb: 51, 210, 236;
     --bs-primary-rgb: 0, 195, 227;
+    --bs-secondary-color: var(--sx-graphite);
+    --bs-code-color: var(--sx-paper);
+    --bs-border-radius: var(--sx-r);
+    --bs-border-radius-sm: var(--sx-r-sm);
+    --bs-border-radius-lg: var(--sx-r-lg);
+    --bs-border-radius-xl: var(--sx-r-lg);
+    --bs-border-radius-xxl: var(--sx-r-lg);
+    --bs-border-radius-2xl: var(--sx-r-lg);
+    /* Two signals, like the two Joy-Con: blue is on, fine or selected, red needs you.
+       Bootstrap's green, amber and cyan fold into them. */
+    --bs-success: var(--sx-blue);
+    --bs-success-rgb: 0, 195, 227;
+    --bs-info: var(--sx-blue);
+    --bs-info-rgb: 0, 195, 227;
+    --bs-warning: var(--sx-red);
+    --bs-warning-rgb: 255, 69, 84;
+    --bs-danger: var(--sx-red);
+    --bs-danger-rgb: 255, 69, 84;
+    --bs-success-text-emphasis: var(--sx-blue);
+    --bs-success-bg-subtle: rgba(0, 195, 227, .12);
+    --bs-success-border-subtle: rgba(0, 195, 227, .3);
+    --bs-info-text-emphasis: var(--sx-blue);
+    --bs-info-bg-subtle: rgba(0, 195, 227, .12);
+    --bs-info-border-subtle: rgba(0, 195, 227, .3);
+    --bs-warning-text-emphasis: var(--sx-red-text);
+    --bs-warning-bg-subtle: rgba(255, 69, 84, .12);
+    --bs-warning-border-subtle: rgba(255, 69, 84, .3);
+    --bs-danger-text-emphasis: var(--sx-red-text);
+    --bs-danger-bg-subtle: rgba(255, 69, 84, .12);
+    --bs-danger-border-subtle: rgba(255, 69, 84, .3);
+    --bs-form-valid-color: var(--sx-blue);
+    --bs-form-valid-border-color: var(--sx-blue);
+    --bs-form-invalid-color: var(--sx-red-text);
+    --bs-form-invalid-border-color: var(--sx-red);
 }
+.btn, .btn-sm, .btn-lg { --bs-btn-border-radius: 999px; --bs-btn-font-weight: 600; }
 .btn-primary {
     --bs-btn-color: #04252B;
     --bs-btn-bg: var(--sx-blue);
@@ -42,6 +83,56 @@
     --bs-btn-disabled-bg: var(--sx-blue);
     --bs-btn-disabled-border-color: var(--sx-blue);
     font-weight: 600;
+}
+
+/* Bootstrap parts, in the same corners and colours. */
+.alert { --bs-alert-border-color: transparent; }
+.badge { --bs-badge-border-radius: 999px; --bs-badge-font-weight: 600; }
+.badge.text-bg-success { background: rgba(0, 195, 227, .14) !important; color: var(--sx-blue) !important; }
+.badge.text-bg-danger { background: rgba(255, 69, 84, .14) !important; color: var(--sx-red-text) !important; }
+.dropdown-menu {
+    --bs-dropdown-bg: var(--sx-dock);
+    --bs-dropdown-border-color: var(--sx-line);
+    --bs-dropdown-border-radius: var(--sx-r);
+    --bs-dropdown-padding-x: 6px;
+    --bs-dropdown-padding-y: 6px;
+    --bs-dropdown-item-padding-x: 12px;
+    --bs-dropdown-item-padding-y: 8px;
+    --bs-dropdown-item-border-radius: var(--sx-r-sm);
+    --bs-dropdown-font-size: 14px;
+    --bs-dropdown-link-color: var(--sx-paper);
+    --bs-dropdown-link-hover-color: var(--sx-paper);
+    --bs-dropdown-link-hover-bg: rgba(241, 241, 238, .08);
+    --bs-dropdown-link-active-color: #04252B;
+    --bs-dropdown-link-active-bg: var(--sx-blue);
+    box-shadow: 0 24px 60px -24px rgba(0, 0, 0, .9);
+}
+.modal {
+    --bs-modal-bg: var(--sx-dock);
+    --bs-modal-border-color: var(--sx-line);
+    --bs-modal-border-radius: var(--sx-r-lg);
+    --bs-modal-inner-border-radius: calc(var(--sx-r-lg) - 1px);
+    --bs-modal-header-border-color: var(--sx-line);
+    --bs-modal-footer-border-color: var(--sx-line);
+}
+.form-control, .form-select {
+    border-color: var(--sx-line);
+    border-radius: var(--sx-r);
+    background-color: var(--sx-console);
+}
+.form-control:focus, .form-select:focus, .form-check-input:focus {
+    border-color: var(--sx-blue);
+    box-shadow: 0 0 0 3px rgba(0, 195, 227, .25);
+}
+.form-check-input:checked { background-color: var(--sx-blue); border-color: var(--sx-blue); }
+.form-control::file-selector-button { background-color: rgba(241, 241, 238, .08); color: var(--sx-paper); font-weight: 600; }
+.form-control:hover:not(:disabled):not([readonly])::file-selector-button { background-color: rgba(241, 241, 238, .14); }
+/* Literal text, typed as shown: template variables, commands, file names. */
+code {
+    padding: 1px 5px;
+    border-radius: var(--sx-r-sm);
+    background: rgba(241, 241, 238, .08);
+    font-size: .86em;
 }
 
 body {
@@ -178,6 +269,7 @@ body {
     align-items: center;
     gap: 8px;
     padding: 8px 16px;
+    border: 0;
     border-radius: 999px;
     background: rgba(241, 241, 238, .1);
     color: var(--sx-paper);
@@ -186,19 +278,20 @@ body {
     white-space: nowrap;
 }
 .sx-nav-btn:hover { background: rgba(241, 241, 238, .18); color: var(--sx-paper); }
-.sx-nav-btn--plain { background: transparent; color: var(--sx-graphite); }
-.sx-nav-btn--plain:hover { background: rgba(241, 241, 238, .1); }
+.sx-nav-caret { font-size: 11px; opacity: .7; }
+.sx-menu { min-width: 200px; }
+.sx-menu .bi { margin-right: 10px; color: var(--sx-graphite); }
 .sx-nav-toggle {
     margin-left: auto;
     padding: 6px 10px;
     border: 0;
-    border-radius: 10px;
+    border-radius: var(--sx-r);
     background: rgba(241, 241, 238, .1);
     color: var(--sx-paper);
     font-size: 22px;
     line-height: 1;
 }
-.sx-nav a:focus-visible, .sx-nav-toggle:focus-visible { outline: 2px solid var(--sx-blue); outline-offset: 2px; }
+.sx-nav a:focus-visible, .sx-nav button:focus-visible { outline: 2px solid var(--sx-blue); outline-offset: 2px; }
 @media (max-width: 767.98px) {
     .sx-nav { padding-top: 12px; padding-bottom: 12px; min-height: 0; }
     .sx-nav--over.sx-nav { background: rgba(28, 29, 33, .92); }
@@ -219,7 +312,7 @@ body {
     width: min(400px, 100%);
     padding: 36px 32px 32px;
     border: 1px solid var(--sx-line);
-    border-radius: 24px;
+    border-radius: var(--sx-r-lg);
     background: rgba(39, 40, 46, .72);
     box-shadow: 0 30px 80px -40px rgba(0, 0, 0, .9);
 }
@@ -241,9 +334,9 @@ body {
 .sx-auth-error {
     margin: 0 0 18px;
     padding: 10px 14px;
-    border-radius: 12px;
+    border-radius: var(--sx-r);
     background: rgba(255, 69, 84, .14);
-    color: #FF8A94;
+    color: var(--sx-red-text);
     font-size: 14px;
     font-weight: 600;
 }
@@ -253,7 +346,7 @@ body {
     width: 100%;
     padding: 12px 14px;
     border: 1px solid var(--sx-line);
-    border-radius: 12px;
+    border-radius: var(--sx-r);
     background: var(--sx-console);
     color: var(--sx-paper);
     font: 500 15px var(--sx-font);
@@ -263,6 +356,8 @@ body {
 .sx-check input { width: 18px; height: 18px; accent-color: var(--sx-blue); }
 .sx-auth-note { margin: 2px 0 22px; color: var(--sx-graphite); font-size: 13px; }
 .sx-auth-submit { width: 100%; justify-content: center; }
+.sx-auth-back { display: block; margin-top: 16px; color: var(--sx-graphite); font-size: 14px; font-weight: 600; text-align: center; text-decoration: none; }
+.sx-auth-back:hover { color: var(--sx-paper); }
 
 @media (prefers-reduced-motion: reduce) {
     .sx-ambient img { transition: none; }

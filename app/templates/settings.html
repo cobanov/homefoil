@@ -49,10 +49,10 @@
                     <li><span class="sx-dot"></span>No admin account yet, so anyone who can reach this server can change it.
                         <a href="/admin/settings#Authentication">Add an admin</a></li>
                     {% endif %}
-                    <li id="missingKeysAlert" class="d-none"><span class="sx-dot adm-dot-warn"></span>Console keys are missing or
+                    <li id="missingKeysAlert" class="d-none"><span class="sx-dot"></span>Console keys are missing or
                         invalid, so only files named with <code>[TITLEID][vVERSION]</code> are recognised.
                         <a href="/admin/settings#consoleKeysInputLabel">Add keys</a></li>
-                    <li id="missingShopHostAlert" style="display: none;"><span class="sx-dot adm-dot-warn"></span>No shop URL,
+                    <li id="missingShopHostAlert" style="display: none;"><span class="sx-dot"></span>No shop URL,
                         so requests from outside your network are not host-checked.
                         <a href="/admin/settings#shopHostInput">Set the URL</a></li>
                 </ul>
@@ -628,8 +628,8 @@
                 paths.forEach(path => {
                     // The path is set with .text()/.attr(): concatenating it into markup, or into an
                     // inline handler, makes the browser eat backslashes in Windows paths (issue #297).
-                    const scanBtn = $('<button type="button" class="btn btn-outline-info btn-sm scanBtn"><i class="bi bi-arrow-clockwise"></i></button>').attr('data-bs-path', path);
-                    const deleteBtn = $('<button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deletePathModal"><i class="bi bi-x-circle"></i></button>').attr('data-bs-path', path);
+                    const scanBtn = $('<button type="button" class="btn btn-outline-info btn-sm scanBtn" aria-label="Scan"><i class="bi bi-arrow-clockwise"></i></button>').attr('data-bs-path', path);
+                    const deleteBtn = $('<button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deletePathModal" aria-label="Remove folder"><i class="bi bi-trash3"></i></button>').attr('data-bs-path', path);
                     $('#pathsTable tbody').append(
                         $('<tr>').append($('<td>').text(path), $('<td>').append(scanBtn, ' ', deleteBtn)));
                 })
@@ -765,8 +765,7 @@
                             <label class="form-check-label">Admin</label>
                         </div>`
                     + '</td><td>' +
-                    '<button type="button" class="btn btn-outline-info btn-sm" disabled=""><i class="bi bi-pencil-square"></i></button> ' +
-                    '<button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteUserModal" data-bs-id="' + user['id'] + '" data-bs-user="' + user['user'] + '"\'><i class="bi bi-x-circle"></i></button>' +
+                    '<button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteUserModal" data-bs-id="' + user['id'] + '" data-bs-user="' + user['user'] + '" aria-label="Delete user"><i class="bi bi-trash3"></i></button>' +
                     '</td></tr>');
             });
         })

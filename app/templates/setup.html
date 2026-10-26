@@ -296,7 +296,7 @@
     gap: 4px;
     margin-bottom: 16px;
     padding: 4px;
-    border-radius: 16px;
+    border-radius: 999px;
     background: rgba(241, 241, 238, .06);
 }
 .su-client {
@@ -305,7 +305,7 @@
     gap: 8px;
     padding: 9px 16px;
     border: 0;
-    border-radius: 12px;
+    border-radius: 999px;
     background: transparent;
     color: var(--sx-graphite);
     font: 600 15px var(--sx-font);
@@ -325,7 +325,7 @@
 .su-panel {
     padding: clamp(20px, 3vw, 32px);
     border: 1px solid var(--sx-line);
-    border-radius: 20px;
+    border-radius: var(--sx-r-lg);
     background: rgba(39, 40, 46, .72);
 }
 .su-panel h2 { margin: 0; font-size: 22px; font-weight: 700; }
@@ -370,7 +370,8 @@
 }
 
 /* What to type into the client */
-.su-fields { width: 100%; border-collapse: collapse; border-radius: 14px; background: var(--sx-console); overflow: hidden; }
+.su-fields code { padding: 0; background: none; }
+.su-fields { width: 100%; border-collapse: collapse; border-radius: var(--sx-r); background: var(--sx-console); overflow: hidden; }
 .su-fields tr + tr { border-top: 1px solid var(--sx-line); }
 .su-fields th, .su-fields td { padding: 8px 0 8px 16px; vertical-align: middle; }
 .su-fields th { width: 34%; color: var(--sx-graphite); font-size: 14px; font-weight: 500; white-space: nowrap; }
@@ -382,7 +383,7 @@
     width: 32px;
     height: 32px;
     border: 0;
-    border-radius: 9px;
+    border-radius: 999px;
     background: transparent;
     color: var(--sx-graphite);
 }
@@ -390,13 +391,13 @@
 .su-copy.is-copied { color: var(--sx-blue); }
 
 /* Local or remote */
-.su-net { display: inline-flex; gap: 2px; margin: 0; padding: 3px; border: 0; border-radius: 12px; background: rgba(241, 241, 238, .06); }
+.su-net { display: inline-flex; gap: 2px; margin: 0; padding: 3px; border: 0; border-radius: 999px; background: rgba(241, 241, 238, .06); }
 .su-net label {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
-    border-radius: 9px;
+    border-radius: 999px;
     color: var(--sx-graphite);
     font-size: 14px;
     font-weight: 600;
@@ -408,7 +409,7 @@
 
 @media (max-width: 575.98px) {
     .su { padding-top: 28px; }
-    .su-clients { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+    .su-clients { display: grid; grid-template-columns: 1fr 1fr; width: 100%; border-radius: var(--sx-r-lg); }
     .su-client { justify-content: center; padding: 10px 8px; }
     .su-fields th { width: auto; white-space: normal; }
 }

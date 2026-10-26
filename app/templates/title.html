@@ -42,7 +42,7 @@
         width: 84px;
         height: 84px;
         flex-shrink: 0;
-        border-radius: 14px;
+        border-radius: var(--sx-r);
         object-fit: cover;
         box-shadow: 0 10px 28px -12px rgba(0, 0, 0, .8);
     }
@@ -86,12 +86,12 @@
         align-self: flex-start;
     }
     .sx-link:hover { text-decoration: underline; }
-    .sx-link:focus-visible { outline: 2px solid var(--sx-blue); outline-offset: 3px; border-radius: 2px; }
+    .sx-link:focus-visible { outline: 2px solid var(--sx-blue); outline-offset: 3px; border-radius: var(--sx-r-sm); }
 
     .sx-own {
         margin: 26px 0 0;
         padding: 6px 20px;
-        border-radius: 16px;
+        border-radius: var(--sx-r-lg);
         background: rgba(39, 40, 46, .78);
         backdrop-filter: blur(10px);
     }
@@ -118,7 +118,7 @@
         aspect-ratio: 16 / 9;
         padding: 0;
         border: 0;
-        border-radius: 18px;
+        border-radius: var(--sx-r-lg);
         overflow: hidden;
         background: var(--sx-dock);
         cursor: zoom-in;
@@ -142,7 +142,7 @@
         aspect-ratio: 16 / 9;
         padding: 0;
         border: 0;
-        border-radius: 10px;
+        border-radius: var(--sx-r);
         overflow: hidden;
         background: var(--sx-dock);
         opacity: .55;
@@ -163,7 +163,7 @@
         max-height: min(80vh, 760px);
         padding: 0;
         border: 0;
-        border-radius: 20px;
+        border-radius: var(--sx-r-lg);
         background: var(--sx-dock);
         color: var(--sx-paper);
         box-shadow: 0 40px 80px -20px rgba(0, 0, 0, .8);
@@ -218,7 +218,7 @@
         box-shadow: none;
         overflow: visible;
     }
-    .sx-shot-dialog img { display: block; width: 100%; border-radius: 16px; }
+    .sx-shot-dialog img { display: block; width: 100%; border-radius: var(--sx-r); }
     .sx-shot-bar { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 16px; }
     .sx-shot-bar span { min-width: 64px; text-align: center; color: var(--sx-graphite); font-variant-numeric: tabular-nums; }
 

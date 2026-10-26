@@ -1,10 +1,45 @@
 .card {
-    border-radius: 8px !important;
-    /* linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent 50%), */
+    border-radius: var(--sx-r-lg) !important;
 }
 
-.btn-outline-info {
-    --bs-btn-hover-color: #fff;
+/* Row actions in the admin tables: quiet round icon buttons, red only for removal. */
+.btn-outline-info,
+.btn-outline-danger,
+.btn-secondary {
+    --bs-btn-color: var(--sx-paper);
+    --bs-btn-bg: rgba(241, 241, 238, .07);
+    --bs-btn-border-color: transparent;
+    --bs-btn-hover-color: var(--sx-paper);
+    --bs-btn-hover-bg: rgba(241, 241, 238, .14);
+    --bs-btn-hover-border-color: transparent;
+    --bs-btn-active-color: var(--sx-paper);
+    --bs-btn-active-bg: rgba(241, 241, 238, .2);
+    --bs-btn-active-border-color: transparent;
+    --bs-btn-disabled-color: var(--sx-graphite);
+    --bs-btn-disabled-bg: transparent;
+    --bs-btn-disabled-border-color: transparent;
+}
+.btn-outline-danger {
+    --bs-btn-color: var(--sx-red-text);
+    --bs-btn-hover-color: var(--sx-red-text);
+    --bs-btn-hover-bg: rgba(255, 69, 84, .16);
+    --bs-btn-active-color: var(--sx-red-text);
+    --bs-btn-active-bg: rgba(255, 69, 84, .24);
+}
+.btn-outline-info.btn-sm, .btn-outline-danger.btn-sm {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+}
+.btn-danger {
+    --bs-btn-bg: var(--sx-red);
+    --bs-btn-border-color: var(--sx-red);
+    --bs-btn-hover-bg: #FF6874;
+    --bs-btn-hover-border-color: #FF6874;
+    --bs-btn-active-bg: #E63A48;
+    --bs-btn-active-border-color: #E63A48;
 }
 
 .col-1, .col-2, .col-3, .col-4, .col-6, .col-12 {
@@ -24,7 +59,8 @@
     color: var(--bs-code-color);
 }
 
-/* Admin pages: a sticky column of pill links, like the top bar's, beside the panel. */
+/* Admin pages: the console's System Settings. A sticky list of categories beside the panel,
+   the open one marked by a blue bar. */
 .setting-body {
     display: flex;
     align-items: flex-start;
@@ -51,11 +87,12 @@
 .adm-nav { display: grid; gap: 4px; }
 
 .adm-nav a {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 9px 14px;
-    border-radius: 999px;
+    gap: 12px;
+    padding: 10px 14px 10px 18px;
+    border-radius: var(--sx-r);
     color: var(--sx-graphite);
     font-size: 15px;
     font-weight: 600;
@@ -63,7 +100,18 @@
 }
 
 .adm-nav a:hover { color: var(--sx-paper); background: rgba(241, 241, 238, .05); }
-.adm-nav a.active { color: var(--sx-paper); background: rgba(241, 241, 238, .1); }
+.adm-nav a.active { color: var(--sx-paper); background: rgba(241, 241, 238, .07); }
+.adm-nav a.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 9px;
+    bottom: 9px;
+    width: 4px;
+    border-radius: 999px;
+    background: var(--sx-blue);
+}
+.adm-nav a.active .bi { color: var(--sx-blue); }
 
 .adm-subnav {
     margin: 6px 0 10px 24px;
@@ -74,7 +122,7 @@
 .adm-subnav a {
     display: block;
     padding: 5px 10px;
-    border-radius: 8px;
+    border-radius: var(--sx-r-sm);
     color: var(--sx-graphite);
     font-size: 13.5px;
     font-weight: 500;
@@ -99,7 +147,7 @@
 .sx-btn:disabled { opacity: .5; cursor: default; }
 
 /* Page header: a title and one line on what the page is for, actions to the right. */
-.adm-page { max-width: 1040px; }
+.adm-page { max-width: 1120px; }
 
 .adm-head {
     display: grid;
@@ -125,7 +173,7 @@
 .adm-card,
 .settings-panel .card {
     border: 1px solid var(--sx-line);
-    border-radius: 18px !important;
+    border-radius: var(--sx-r-lg) !important;
     background: var(--sx-dock);
 }
 
@@ -135,50 +183,69 @@
 }
 
 .adm-card-head { margin-bottom: 8px; }
-.adm-card-head h2, .adm-section-title { font-size: 20px; font-weight: 700; }
+.adm-card-head h2, .adm-section-title {
+    font-size: 21px;
+    font-weight: 700;
+    font-stretch: 112%;
+    font-variation-settings: "wdth" 112;
+}
 .adm-card-head p { margin: 4px 0 0; color: var(--sx-graphite); font-size: 14px; }
 
 .adm-card-foot {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid var(--sx-line);
+    margin-top: 14px;
 }
 
 .adm-card .sx-btn { padding: 10px 22px; font-size: 14px; }
 
+/* A group inside a card: quieter than the card's title, so the rows under it lead. */
 .adm-sub {
-    padding: 26px 0 4px;
-    font-size: 16px;
-    font-weight: 700;
+    padding: 28px 0 2px;
+    color: var(--sx-graphite);
+    font-size: 14px;
+    font-weight: 600;
     scroll-margin-top: calc(var(--sx-nav-h) + 20px);
 }
 
 /* A setting: name and help on the left, the control on the right. */
 .adm-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
     gap: 10px 36px;
     align-items: center;
     padding: 14px 0;
 }
+
+/* Like the console's settings: a switch or a short value sits at the row's right edge,
+   with what it acts on beside it; fields take the column. */
+.adm-row-control {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px 12px;
+}
+.adm-row-control > * { flex: 1 1 100%; min-width: 0; }
+.adm-row-control > .form-switch,
+.adm-row-control > .adm-narrow,
+.adm-row-control > .setting-stat { flex: 0 0 auto; }
+.adm-row-control > .setting-stat { order: -1; margin: 0; }
 
 .adm-row + .adm-row { border-top: 1px solid var(--sx-line); }
 .adm-label { display: block; margin: 0; font-size: 15px; font-weight: 600; }
 .adm-help { margin: 3px 0 0; color: var(--sx-graphite); font-size: 13.5px; line-height: 1.45; }
 .adm-sub-note { padding-top: 10px; }
 .adm-row-control .form-switch { display: inline-block; vertical-align: middle; }
-.adm-row-control .form-switch .form-check-input { width: 2.6em; height: 1.4em; margin-top: 0; cursor: pointer; }
+.adm-row-control .form-switch { padding-left: 0; }
+.adm-row-control .form-switch .form-check-input { width: 3em; height: 1.6em; margin: 0; float: none; cursor: pointer; }
 .adm-narrow { max-width: 13rem; }
 .adm-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-.settings-panel .form-control,
-.settings-panel .form-select,
 .settings-panel .input-group-text {
     border-color: var(--sx-line);
-    border-radius: 12px;
+    border-radius: var(--sx-r);
     background-color: var(--sx-console);
 }
 
@@ -186,18 +253,13 @@
 .settings-panel .input-group > :not(:first-child) { border-top-left-radius: 0; border-bottom-left-radius: 0; }
 .settings-panel .input-group-text { color: var(--sx-graphite); }
 
-.settings-panel .form-check-input:checked {
-    background-color: var(--sx-blue);
-    border-color: var(--sx-blue);
-}
-
 .adm-table {
     --bs-table-bg: transparent;
     --bs-table-hover-bg: rgba(241, 241, 238, .04);
     margin-bottom: 4px;
 }
 
-.adm-card .card { background: var(--sx-console); }
+.adm-card .card { border-radius: var(--sx-r) !important; background: var(--sx-console); }
 .adm-table th { color: var(--sx-graphite); font-size: 13px; font-weight: 600; }
 .adm-table td { overflow-wrap: break-word; }
 .adm-table > tbody > tr:last-child > * { border-bottom: 0; }
@@ -212,7 +274,7 @@
     gap: 10px 14px;
     margin-top: 14px;
     padding: 16px;
-    border-radius: 14px;
+    border-radius: var(--sx-r);
     background: rgba(0, 0, 0, .14);
 }
 
@@ -243,18 +305,21 @@
 .adm-keys {
     padding: 10px 14px;
     border: 1px solid var(--sx-line);
-    border-radius: 12px;
+    border-radius: var(--sx-r);
     font-size: 14px;
 }
 
+/* A note under a setting: neutral when it explains, red when something needs you. */
 .adm-note {
     margin: 4px 0 0;
     padding: 10px 14px;
-    border-radius: 12px;
+    border-radius: var(--sx-r);
+    background: rgba(241, 241, 238, .05);
+    color: var(--sx-graphite);
     font-size: 14px;
 }
 
-.adm-note-warn { background: rgba(245, 184, 61, .1); color: #F5C76B; }
+.adm-note-warn { background: rgba(255, 69, 84, .1); color: var(--sx-red-text); }
 
 /* One line per issue, each linking to the setting that fixes it. Hidden when none shows:
    the keys and shop URL lines are switched on by the page script. */
@@ -268,7 +333,6 @@
 .adm-attention-title { padding-bottom: 8px; font-size: 15px; font-weight: 700; }
 .adm-attention ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 14px; }
 .adm-attention a { margin-left: 4px; font-weight: 600; white-space: nowrap; }
-.sx-dot.adm-dot-warn { background: #F5B83D; }
 
 /* Phones: the sidebar becomes a row of pills, the settings index a second row. */
 .adm-index-row { display: none; }
@@ -288,7 +352,8 @@
         padding: 2px var(--sx-gutter);
     }
 
-    .adm-nav a { white-space: nowrap; }
+    .adm-nav a { padding: 9px 14px; white-space: nowrap; }
+    .adm-nav a.active::before { top: auto; right: 14px; bottom: 3px; left: 14px; width: auto; height: 3px; }
     .adm-nav .bi { display: none; }
     .adm-subnav { display: none; }
 
@@ -306,7 +371,7 @@
         white-space: nowrap;
     }
 
-    .adm-card { padding: 20px 18px; border-radius: 16px; }
+    .adm-card { padding: 20px 18px; }
     .adm-row { grid-template-columns: 1fr; gap: 10px; }
     .adm-narrow { max-width: none; }
 }
@@ -426,31 +491,37 @@
 /* Stats */
 .stat-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
     margin-bottom: 20px;
 }
 
+/* A figure tile, shared with the Files page's tiles: what it counts on top, the count, a note. */
 .stat-grid > div {
-    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px 18px;
     border: 1px solid var(--sx-line);
-    border-radius: 18px;
+    border-radius: var(--sx-r-lg);
     background: var(--sx-dock);
 }
 
-.stat-value {
-    font-size: 1.75rem;
-    font-weight: 600;
+.stat-value,
+.files-tile-count {
+    font-size: 30px;
+    font-weight: 800;
+    font-stretch: 112%;
+    font-variation-settings: "wdth" 112;
     line-height: 1.1;
+    font-variant-numeric: tabular-nums;
 }
 
-.stat-label {
-    font-weight: 500;
-}
+.stat-label { order: -1; color: var(--sx-graphite); font-size: 13.5px; font-weight: 600; }
 
 .stat-note {
-    color: var(--bs-secondary-color);
-    font-size: .8rem;
+    color: var(--sx-graphite);
+    font-size: 13px;
 }
 
 /* Two columns rather than auto-fit: four sections in a row would put each table's
@@ -506,20 +577,22 @@
     --files-surface-hover: #e7eaee;
 }
 
+/* On the dark theme the tones fold into the site's two signals: blue for fine, red for
+   needs you, graphite for the rest. */
 [data-bs-theme=dark] .files-page {
-    --files-success: #75b798;
-    --files-success-bg: #16301f;
-    --files-info: #6edff6;
-    --files-info-bg: #0f2c34;
-    --files-warning: #f2c95c;
-    --files-warning-bg: #362b0e;
-    --files-danger: #ea868f;
-    --files-danger-bg: #3a1a1d;
-    --files-primary: #6ea8fe;
-    --files-primary-bg: #1b2b45;
-    --files-secondary: #9aa3ad;
-    --files-secondary-bg: #2f343a;
-    --files-off: #525a63;
+    --files-success: var(--sx-blue);
+    --files-success-bg: rgba(0, 195, 227, .12);
+    --files-info: var(--sx-paper);
+    --files-info-bg: rgba(241, 241, 238, .08);
+    --files-warning: var(--sx-red-text);
+    --files-warning-bg: rgba(255, 69, 84, .1);
+    --files-danger: var(--sx-red-text);
+    --files-danger-bg: rgba(255, 69, 84, .16);
+    --files-primary: var(--sx-blue);
+    --files-primary-bg: rgba(0, 195, 227, .12);
+    --files-secondary: var(--sx-graphite);
+    --files-secondary-bg: rgba(241, 241, 238, .06);
+    --files-off: #4A4B53;
     --files-surface: var(--sx-dock);
     --files-surface-hover: #2F3037;
 }
@@ -584,6 +657,11 @@
     margin-bottom: 1.25rem;
 }
 
+@media (max-width: 575.98px) {
+    .files-tile { min-height: 0; padding: 14px 16px; }
+    .files-tile-ok { font-size: 1.75rem; }
+}
+
 /* Label at the top, subtitle at the bottom, the count between them. */
 .files-tile {
     position: relative;
@@ -591,8 +669,9 @@
     grid-template-rows: auto 1fr auto;
     align-items: center;
     min-height: 8.5rem;
-    padding: .9rem 1rem;
-    border-radius: .75rem;
+    padding: 16px 18px;
+    border: 1px solid var(--sx-line);
+    border-radius: var(--sx-r-lg);
     background: var(--files-surface);
     color: var(--bs-body-color);
     text-decoration: none;
@@ -602,12 +681,10 @@
     background: var(--files-surface-hover);
 }
 
+/* The open view gets the console's selection ring. */
 .files-tile.active {
-    background: var(--files-primary-bg);
-}
-
-.files-tile.active {
-    box-shadow: inset 0 0 0 1.5px var(--files-primary);
+    border-color: transparent;
+    box-shadow: inset 0 0 0 2px var(--sx-blue);
 }
 
 /* Nothing to report: a check mark takes the tile's free side. */
@@ -617,29 +694,23 @@
     top: 50%;
     right: 1rem;
     transform: translateY(-50%);
-    font-size: 4rem;
+    font-size: 2.5rem;
     line-height: 1;
-    color: var(--files-success);
+    color: var(--sx-blue);
 }
 
 .files-tile.ok .files-tile-ok {
     display: block;
 }
 
+.files-tile-label { font-size: 13.5px; font-weight: 600; }
 .files-tile-label,
 .files-tile-sub {
-    font-size: .8rem;
-    color: var(--bs-secondary-color);
+    font-size: 13px;
+    color: var(--sx-graphite);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-.files-tile-count {
-    font-size: 2rem;
-    font-weight: 600;
-    line-height: 1.1;
-    font-variant-numeric: tabular-nums;
 }
 
 .files-tile-dot {
@@ -775,7 +846,7 @@
 .files-chip {
     display: inline-block;
     padding: 0 .4em;
-    border-radius: .25rem;
+    border-radius: var(--sx-r-sm);
     background: var(--files-surface);
     color: var(--files-secondary);
     font-family: var(--bs-font-monospace);
@@ -901,7 +972,7 @@
     flex: none;
     width: 4rem;
     height: 4rem;
-    border-radius: .65rem;
+    border-radius: var(--sx-r);
     object-fit: cover;
     background: var(--files-surface);
     font-size: 1.5rem;
@@ -910,14 +981,14 @@
 .files-avatar.sm {
     width: 1.6rem;
     height: 1.6rem;
-    border-radius: .35rem;
+    border-radius: var(--sx-r-sm);
     font-size: .8rem;
 }
 
 .files-avatar.lg {
     width: 6rem;
     height: 6rem;
-    border-radius: 1rem;
+    border-radius: var(--sx-r);
     font-size: 2.25rem;
 }
 
@@ -1021,7 +1092,7 @@
 .files-verdicts > div {
     display: grid;
     padding: .35rem .5rem;
-    border-radius: .4rem;
+    border-radius: var(--sx-r-sm);
     background: var(--files-surface);
     font-size: .75rem;
 }
@@ -1143,22 +1214,24 @@
 .setting-stat {
     display: inline-block;
     margin-left: .5rem;
-    padding: .05rem .6rem;
+    padding: 4px 11px;
     border-radius: 999px;
-    background: var(--bs-tertiary-bg);
-    color: var(--bs-body-color);
-    font-size: .75rem;
+    background: rgba(241, 241, 238, .07);
+    color: var(--sx-paper);
+    font-size: 12.5px;
+    font-weight: 600;
     text-decoration: none;
     vertical-align: middle;
 }
 
 .setting-stat:hover {
-    background: var(--bs-secondary-bg);
-    color: var(--bs-body-color);
+    background: rgba(241, 241, 238, .14);
+    color: var(--sx-paper);
 }
 
 .setting-stat-none {
-    color: var(--bs-secondary-color);
+    color: var(--sx-graphite);
+    font-weight: 500;
 }
 
 .spin {
