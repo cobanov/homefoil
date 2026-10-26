@@ -3,7 +3,9 @@ version: "3"
 services:
   ownfoil:
     container_name: ownfoil
-    image: a1ex4/ownfoil:latest
+    # This fork is not on Docker Hub: `docker compose up -d --build` builds it from this folder.
+    build: .
+    image: ownfoil-fork:latest
     environment:
       # For write permission in config directory
       - PUID=1000
