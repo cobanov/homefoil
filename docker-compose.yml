@@ -1,15 +1,16 @@
 version: "3"
 
 services:
-  ownfoil:
-    container_name: ownfoil
+  homefoil:
+    container_name: homefoil
     # This fork is not on Docker Hub: `docker compose up -d --build` builds it from this folder.
     build: .
-    image: ownfoil-fork:latest
+    image: homefoil:latest
     environment:
       # For write permission in config directory
       - PUID=1000
       - PGID=1000
+      # Optional. Without it the first start makes admin / admin and asks for a new password.
       # to create/update an admin user at startup
       # - USER_ADMIN_NAME=admin
       # - USER_ADMIN_PASSWORD=asdvnf!546

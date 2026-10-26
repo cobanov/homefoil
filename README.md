@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="app/static/logo/logo-256.png" width="112" alt="Ownfoil">
+  <img src="app/static/logo/logo-256.png" width="112" alt="Homefoil">
 </p>
 
-<h1 align="center">Ownfoil</h1>
+<h1 align="center">Homefoil</h1>
 
 <p align="center">
   <b>Your Switch library, as a store you run at home.</b>
@@ -12,10 +12,10 @@
   <b><a href="#install">Install</a></b> ·
   <a href="#add-it-to-your-switch">Add to Switch</a> ·
   <a href="https://github.com/a1ex4/ownfoil">Upstream</a> ·
-  <a href="https://github.com/cobanov/ownfoil/issues">Issues</a>
+  <a href="https://github.com/cobanov/homefoil/issues">Issues</a>
 </p>
 
-> A fork of [a1ex4/ownfoil](https://github.com/a1ex4/ownfoil), going its own way.
+> A fork of [a1ex4/ownfoil](https://github.com/a1ex4/ownfoil), going its own way under a new name.
 > Same shop, settings and database. New web interface and many fixes.
 
 <p align="center">
@@ -26,15 +26,22 @@
   <a href="docs/screenshots/library-phone.jpg"><img src="docs/screenshots/library-phone.jpg" width="24%" alt="The library on a phone"></a>
   <a href="docs/screenshots/title-phone.jpg"><img src="docs/screenshots/title-phone.jpg" width="24%" alt="A game page on a phone"></a>
 </p>
+<p align="center">
+  <a href="docs/screenshots/setup.jpg"><img src="docs/screenshots/setup.jpg" width="49%" alt="The Setup page"></a>
+  <a href="docs/screenshots/admin.jpg"><img src="docs/screenshots/admin.jpg" width="49%" alt="The admin settings"></a>
+</p>
 
 ## What's new
 
-- Store-style library. Hover a game, it fills the top of the page.
+- Store-style library. The top card cycles through your games; hover one to show it there.
 - Search, genre filters, **Update available**, **Missing DLC** and sorting.
 - One-screen game page: artwork, facts, screenshots, what you own.
+- Setup page with copy-ready values for Sphaira, Tinfoil and CyberFoil.
+- Admin pages rebuilt: one card per topic, one list of what needs attention.
 - Works on phones.
+- First start: log in with admin / admin, then pick a new password.
 - No requests to outside services. Even the font is served locally.
-- Everything else is Ownfoil: shop for Tinfoil, Sphaira and CyberFoil, file identification,
+- Everything else comes from Ownfoil: shop for Tinfoil, Sphaira and CyberFoil, file identification,
   organizing, verifying, compressing, several users.
 
 ## What this fork fixes
@@ -52,7 +59,7 @@
 - Deleted users stay logged out.
 - The last admin can't be deleted.
 - File names can't run code on the Tasks page.
-- Login only redirects inside Ownfoil.
+- Login only redirects inside Homefoil.
 - Login doesn't reveal user names. Wrong passwords wait a second.
 - SameSite cookies, checked key uploads, same-site live updates.
 - Secure random key for Tinfoil.
@@ -73,12 +80,10 @@ You need Docker.
 
 1. Get the code.
    ```sh
-   git clone https://github.com/cobanov/ownfoil
-   cd ownfoil
+   git clone https://github.com/cobanov/homefoil
+   cd homefoil
    ```
-2. Edit `docker-compose.yml`:
-   - Replace `/your/game/directory` with your games folder.
-   - Uncomment `USER_ADMIN_NAME` and `USER_ADMIN_PASSWORD`, set your own.
+2. In `docker-compose.yml`, replace `/your/game/directory` with your games folder.
 3. Add your console keys.
    ```sh
    mkdir -p config && cp /path/to/prod.keys config/keys.txt
@@ -87,7 +92,8 @@ You need Docker.
    ```sh
    docker compose up -d --build
    ```
-5. Open `http://<server-ip>:8465`. Your games show up after the first scan.
+5. Open `http://<server-ip>:8465`, log in with **admin** / **admin**.
+6. Pick a new password. Your games show up after the first scan.
 
 No keys yet? Upload them later in **Settings → Titles**.
 
@@ -95,10 +101,10 @@ Update with `git pull && docker compose up -d --build`.
 
 ## Add it to your Switch
 
-Ownfoil's **Setup** page shows the exact values for your server.
+The **Setup** page shows the exact values for your server.
 
 **Sphaira** (recommended)
-1. **Menu → Menus → Ownfoil**.
+1. **Menu → Menus → Ownfoil**. Sphaira still calls it Ownfoil.
 2. **Discover local servers**, pick your shop.
 
 **Tinfoil**
@@ -111,12 +117,12 @@ Ownfoil's **Setup** page shows the exact values for your server.
    | Host | your server's IP |
    | Port | `8465` |
    | Path | `/` |
-   | Username, Password | your Ownfoil user |
+   | Username, Password | your Homefoil user |
    | Title | anything |
 
 **CyberFoil**
 1. **Settings → Shop → Add new shop**.
-2. Protocol `HTTP`, your server's IP, port `8465`, your Ownfoil user.
+2. Protocol `HTTP`, your server's IP, port `8465`, your Homefoil user.
 
 More in [Usage.md](Usage.md).
 
