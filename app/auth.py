@@ -372,7 +372,10 @@ def change_password():
     if request.method == 'POST':
         new_password = request.form.get('password', '')
         valid, error = validate_password(new_password)
-        if new_password != request.form.get('confirm'):
+        # The default password is public, so only a voluntary change asks for the current one.
+        if not forced and not verify_password(current_user.password, request.form.get('current', '')):
+            error = 'Your current password is wrong.'
+        elif new_password != request.form.get('confirm'):
             error = 'The passwords do not match.'
         elif new_password == DEFAULT_PASSWORD:
             error = 'Choose a password other than the default one.'
@@ -384,7 +387,8 @@ def change_password():
             login_user(user, remember=COOKIE_NAME in request.cookies)
             logger.info(f'Password changed for user {user.user}')
             return redirect(local_url(next_url))
-    return render_template('password.html', title='Change password', forced=forced, next=next_url, error=error)
+    return render_template('password.html', title='Change password', forced=forced, next=next_url,
+                           back=local_url(next_url), error=error)
 
 @auth_blueprint.route('/profile')
 @login_required

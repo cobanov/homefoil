@@ -127,8 +127,10 @@ def test_any_logged_in_user_can_change_their_password(shop_app):
     client = shop_app.app.test_client()
     client.post("/login", data={"user": "shopper", "password": "shoppass1"})
     assert "default password" not in client.get("/password").get_data(as_text=True)
-    response = client.post("/password", data={"password": "shoppass2", "confirm": "shoppass2",
-                                              "next": "https://evil.example/"})
+    wrong = client.post("/password", data={"current": "nope", "password": "shoppass2", "confirm": "shoppass2"})
+    assert wrong.status_code == 200 and "current password is wrong" in wrong.get_data(as_text=True)
+    response = client.post("/password", data={"current": "shoppass1", "password": "shoppass2",
+                                              "confirm": "shoppass2", "next": "https://evil.example/"})
     assert response.headers["Location"] == "/"
     with shop_app.app.app_context():
         assert auth.verify_password(User.query.filter_by(user="shopper").one().password, "shoppass2")
