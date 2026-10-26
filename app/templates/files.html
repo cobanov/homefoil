@@ -20,15 +20,15 @@
                 ('duplicates', 'Duplicates'), ('outdated', 'Outdated updates'), ('pending', 'Pending')] %}
 
 {% block panel %}
-<div class="settings-container container-fluid mt-3 files-page">
+<div class="settings-container files-page">
 
-    <div class="task-section-head">
-        <h2 class="mb-0">Files</h2>
-        <button type="button" id="refreshFiles" class="icon-btn ms-auto" title="Refresh">
-            <i class="bi bi-arrow-clockwise"></i>
+    <header class="adm-head">
+        <h1>Files</h1>
+        <p>Every file in your libraries. Actions run as <a href="/admin/tasks">tasks</a>.</p>
+        <button type="button" id="refreshFiles" class="sx-btn sx-btn--quiet adm-head-btn">
+            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>Refresh
         </button>
-    </div>
-    <p class="text-secondary">Manage library files, actions run as <a href="/admin/tasks">tasks</a>.</p>
+    </header>
 
     <nav class="files-tiles" id="filesTiles">
         {% for key, label in tiles %}
@@ -47,7 +47,7 @@
         <p>Every file in all libraries.</p>
     </div>
     <div class="files-status" data-tab="unidentified">
-        <p>Files Ownfoil could not match to any known content in the metadata database.</p>
+        <p>Files Homefoil could not match to any known content in the metadata database.</p>
         <div class="files-settings">
             {{ setting('consoleKeysInput', 'Console keys', 'Valid' if keys_valid else 'Missing',
                        'success' if keys_valid else 'warning') }}

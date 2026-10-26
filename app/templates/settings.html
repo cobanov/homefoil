@@ -1,47 +1,72 @@
 {% extends "settings_layout.html" %}
+
+{# One setting: its name and a line of help on the left, the control on the right. #}
+{% macro row(for_id, label, help='') -%}
+<div class="adm-row">
+    <div class="adm-row-text">
+        {% if for_id %}<label class="adm-label" for="{{ for_id }}">{{ label }}</label>
+        {% else %}<span class="adm-label">{{ label }}</span>{% endif %}
+        {% if help %}<p class="adm-help">{{ help | safe }}</p>{% endif %}
+    </div>
+    <div class="adm-row-control">{{ caller() }}</div>
+</div>
+{%- endmacro %}
+
+{% macro switch(id) -%}
+<div class="form-check form-switch m-0"><input type="checkbox" class="form-check-input" role="switch" id="{{ id }}"></div>
+{%- endmacro %}
+
+{% set sections = [('Authentication', 'Users'), ('library', 'Library'), ('management', 'Library management'),
+                   ('titles', 'Titles and keys'), ('artwork', 'Artwork'), ('shop', 'Shop and clients'),
+                   ('schedule', 'Schedule'), ('workers', 'Workers')] %}
+
+{# The section index, under Settings in the admin sidebar; phones get the row in the panel. #}
+{% block subnav %}
+<ul class="adm-subnav" aria-label="Settings sections">
+    {% for id, label in sections %}<li><a href="#{{ id }}">{{ label }}</a></li>{% endfor %}
+</ul>
+{% endblock %}
+
 {% block panel %}
-            <div class="settings-container container mt-3">
+<div class="settings-container adm-page">
+    <header class="adm-head">
+        <h1>Settings</h1>
+        <p>Everything Homefoil does with your library and your shop.</p>
+    </header>
 
-                {% if admin_account_created == false %}
-                <div class="alert alert-danger" role="alert">
-                    <h4 class="alert-heading">Missing admin account!</h4>
-                    <p>Ownfoil requires an admin account to enable authentication. Until an account with admin rights is
-                        created, <strong>authentication is disabled, anyone can access and change the configuration of
-                            your shop!</strong>
-                        <br>
-                        Add an admin account <a href="/admin/settings#Authentication" class="alert-link">here under
-                            Authentication</a>.
-                    </p>
-                </div>
-                {% endif %}
+    <nav class="adm-index-row" aria-label="Settings sections">
+        <ul>
+            {% for id, label in sections %}<li><a href="#{{ id }}">{{ label }}</a></li>{% endfor %}
+        </ul>
+    </nav>
 
-                <div id="missingKeysAlert" class="alert alert-warning alert-dismissible fade show d-none" role="alert">
-                    <h4 class="alert-heading">Missing / invalid console keys file!</h4>
-                    Console keys are required to decrypt any Nintendo content, including
-                    backups. Ownfoil uses this to identify files, regardless of the filename.</br>
-                    <strong>Titles will be missed or misidentified if you don't fill in your keys!</strong>
-                    See <a target="_blank" href="https://gitea.com/KudbiOdd/easy-switch-hacking-shise/wiki/Dump-device-keys" class="alert-link">this guide</a> on
-                    how to extract the
-                    keys from your console, and upload them <a href="/admin/settings#consoleKeysInputLabel" class="alert-link">here
-                        in Ownfoil.</a>
-                    <hr>
-                    If keys are missing, all files <strong>must contain "[TITLEID][vVERSION]"</strong>, else the file won't be recognized.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+        <div class="adm-cards">
 
-                <div id="missingShopHostAlert" class="alert alert-warning alert-dismissible fade show" role="alert" style="display: none;">
-                    <h4 class="alert-heading">Missing shop Host!</h4>
-                    Host verification from outside the local network is disabled if the shop <code>Host</code> is
-                    missing, configure it <a href="/admin/settings#shopHostInput" class="alert-link">here
-                        in Ownfoil</a> to prevent someone else stealing from your shop.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+            <section class="adm-card adm-attention" aria-labelledby="attentionTitle">
+                <h2 id="attentionTitle" class="adm-attention-title">Needs attention</h2>
+                <ul>
+                    {% if admin_account_created == false %}
+                    <li><span class="sx-dot"></span>No admin account yet, so anyone who can reach this server can change it.
+                        <a href="/admin/settings#Authentication">Add an admin</a></li>
+                    {% endif %}
+                    <li id="missingKeysAlert" class="d-none"><span class="sx-dot adm-dot-warn"></span>Console keys are missing or
+                        invalid, so only files named with <code>[TITLEID][vVERSION]</code> are recognised.
+                        <a href="/admin/settings#consoleKeysInputLabel">Add keys</a></li>
+                    <li id="missingShopHostAlert" style="display: none;"><span class="sx-dot adm-dot-warn"></span>No shop URL,
+                        so requests from outside your network are not host-checked.
+                        <a href="/admin/settings#shopHostInput">Set the URL</a></li>
+                </ul>
+            </section>
 
-                <h2 id="Authentication">Authentication</h2>
-
+            <!-- Users -->
+            <section class="adm-card" id="Authentication" aria-labelledby="usersTitle">
+                <header class="adm-card-head">
+                    <h2 id="usersTitle">Users</h2>
+                    <p>Who can browse the shop, back up and change these settings.</p>
+                </header>
                 <div class="table-responsive">
-                    <table class="table table-hover caption-top" id="userTable">
-                        <caption>List of users:</caption>
+                    <table class="table table-hover adm-table" id="userTable">
+                        <caption class="visually-hidden">Users</caption>
                         <thead>
                             <tr>
                                 <th scope="col">User</th>
@@ -55,79 +80,52 @@
                 </div>
                 <div id="userTableFeedback" class="invalid-feedback"></div>
 
-                <p class="d-inline-flex gap-1">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapseNewUser" aria-expanded="false" aria-controls="collapseNewUser">
-                        Add new user
-                    </button>
-                </p>
                 <div class="collapse" id="collapseNewUser">
-                    <div class="card card-body">
-                        <label class="form-label">Add a new user:</label>
-                        <form class="row g-3">
-                            <div class="col-auto">
-                                <label for="inputNewUser" class="visually-hidden">Email</label>
-                                <input type="text" class="form-control" id="inputNewUser" placeholder="Username">
+                    <form class="adm-inline-form" onsubmit="submitNewUser(); return false;">
+                        <div>
+                            <label for="inputNewUser" class="visually-hidden">Username</label>
+                            <input type="text" class="form-control" id="inputNewUser" placeholder="Username" autocomplete="off">
+                        </div>
+                        <div>
+                            <label for="inputNewUserPassword" class="visually-hidden">Password</label>
+                            <input type="password" class="form-control" id="inputNewUserPassword"
+                                placeholder="Password" autocomplete="new-password">
+                        </div>
+                        <div class="adm-checks">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="checkboxNewUserShopAccess" checked>
+                                <label class="form-check-label" for="checkboxNewUserShopAccess">Shop</label>
                             </div>
-                            <div class="col-auto">
-                                <label for="inputNewUserPassword" class="visually-hidden">Password</label>
-                                <input type="password" class="form-control" id="inputNewUserPassword"
-                                    placeholder="Password">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="checkboxNewUserBackupAccess">
+                                <label class="form-check-label" for="checkboxNewUserBackupAccess">Backup</label>
                             </div>
-                            <div class="col-auto p-2">
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" id="checkboxNewUserShopAccess"
-                                        checked>
-                                    <label class="form-check-label" for="checkboxNewUserShopAccess">Shop Access</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" id="checkboxNewUserBackupAccess">
-                                    <label class="form-check-label" for="checkboxNewUserBackupAccess">Backup
-                                        Access</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" id="checkboxNewUserAdminAccess">
-                                    <label class="form-check-label" for="checkboxNewUserAdminAccess">Admin
-                                        Access</label>
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <button type="button" class="btn btn-primary mb-3"
-                                    onClick='submitNewUser()'>Submit</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Delete User Modal -->
-                <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel"
-                    aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h1 class="modal-title fs-5" id="deleteUserModalLabel">Delete user</h1>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                ...
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Delete</button>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="checkboxNewUserAdminAccess">
+                                <label class="form-check-label" for="checkboxNewUserAdminAccess">Admin</label>
                             </div>
                         </div>
-                    </div>
+                        <button type="button" class="sx-btn sx-btn--primary" onClick='submitNewUser()'>Create user</button>
+                    </form>
                 </div>
 
-                <hr class="hr-settings">
+                <footer class="adm-card-foot">
+                    <button class="sx-btn sx-btn--quiet" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapseNewUser" aria-expanded="false" aria-controls="collapseNewUser">
+                        <i class="bi bi-person-plus" aria-hidden="true"></i>Add user
+                    </button>
+                </footer>
+            </section>
 
-                <h2>Library</h2>
-
-                <h3 class="pt-3 pb-2">Paths</h3>
-                <p class="mb-2">Configure directories containing your games.</p>
+            <!-- Library -->
+            <section class="adm-card" id="library" aria-labelledby="libraryTitle">
+                <header class="adm-card-head">
+                    <h2 id="libraryTitle">Library</h2>
+                    <p>The folders Homefoil reads your games from.</p>
+                </header>
                 <div class="table-responsive">
-                    <table class="table table-hover caption-top" id="pathsTable">
+                    <table class="table table-hover adm-table" id="pathsTable">
+                        <caption class="visually-hidden">Library paths</caption>
                         <thead>
                             <tr>
                                 <th scope="col">Path</th>
@@ -141,341 +139,219 @@
 
                 <div class="alert alert-danger d-none" id="pathsAlert" role="alert"></div>
 
-                <!-- Library buttons -->
-                <div class="row g-3">
-                    <div class="col-auto">
-                        <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseNewPath" aria-expanded="false" aria-controls="collapseNewPath">
-                            Add library path
-                        </button>
-                    </div>
-
-                    <div class="col-auto">
-                        <button type="button" class="btn btn-primary mb-3 scanBtn" onClick='scanLibrary()'>Scan
-                            library</button>
-                    </div>
+                <div class="adm-actions">
+                    <button class="sx-btn sx-btn--quiet" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapseNewPath" aria-expanded="false" aria-controls="collapseNewPath">
+                        <i class="bi bi-folder-plus" aria-hidden="true"></i>Add folder
+                    </button>
+                    <button type="button" class="sx-btn sx-btn--quiet scanBtn" onClick='scanLibrary()'>
+                        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>Scan all</button>
                 </div>
 
                 <div class="collapse" id="collapseNewPath">
-                    <div class="card card-body">
-                        <label class="form-label">Add a new directory:</label>
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <input type="text" class="form-control" id="libraryPathInput" placeholder="Path">
-                            </div>
-                            <div class="col-auto">
-                                <button type="button" id="submitNewLibraryPathBtn" class="btn btn-primary mb-3"
-                                    onClick='submitNewLibraryPath()'>Submit</button>
-                            </div>
+                    <form class="adm-inline-form" onsubmit="submitNewLibraryPath(); return false;">
+                        <div class="flex-grow-1">
+                            <label for="libraryPathInput" class="visually-hidden">Folder path</label>
+                            <input type="text" class="form-control" id="libraryPathInput" placeholder="/path/to/games">
                         </div>
-                    </div>
+                        <button type="button" id="submitNewLibraryPathBtn" class="sx-btn sx-btn--primary"
+                            onClick='submitNewLibraryPath()'>Add</button>
+                    </form>
                 </div>
 
-                <!-- Delete User Modal -->
-                <div class="modal fade" id="deletePathModal" tabindex="-1" aria-labelledby="deletePathModalLabel"
-                    aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h1 class="modal-title fs-5" id="deletePathModalLabel">Delete library path</h1>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                ...
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Delete</button>
-                            </div>
-                        </div>
+                <h3 class="adm-sub">File watcher</h3>
+                {% call row('watcherEnabledCheck', 'Watch for changes', 'Local folders update at once; network shares are checked on an interval.') %}
+                    {{ switch('watcherEnabledCheck') }}
+                {% endcall %}
+                {% call row('watcherIntervalInput', 'Polling interval', 'How often network shares are checked.') %}
+                    <div class="input-group adm-narrow">
+                        <input type="number" min="1" class="form-control" id="watcherIntervalInput">
+                        <span class="input-group-text">seconds</span>
                     </div>
-                </div>
+                    <div id="watcherIntervalFeedback"></div>
+                {% endcall %}
 
-                <h3 class="pt-4 pb-2">File watcher</h3>
-                <p>Monitor library paths for changes. Local paths use native OS events; network
-                    filesystems are polled at the interval below.</p>
-                <div class="row g-3 align-items-center mb-3">
-                    <div class="col-auto">
-                        <div class="form-check form-switch mb-0">
-                            <input type="checkbox" class="form-check-input" id="watcherEnabledCheck">
-                            <label class="form-check-label" for="watcherEnabledCheck">Enable file watcher</label>
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <label class="col-form-label" for="watcherIntervalInput">Polling interval</label>
-                    </div>
-                    <div class="col-auto">
-                        <div class="input-group">
-                            <input type="number" min="1" class="form-control" id="watcherIntervalInput" style="width:100px;">
-                            <span class="input-group-text">s</span>
-                        </div>
-                        <div id="watcherIntervalFeedback"></div>
-                    </div>
-                </div>
-                <button type="button" id="submitWatcherSettingsBtn" class="btn btn-primary mb-3"
-                    onClick='submitWatcherSettings()'>Save</button>
+                <footer class="adm-card-foot">
+                    <button type="button" id="submitWatcherSettingsBtn" class="sx-btn sx-btn--primary"
+                        onClick='submitWatcherSettings()'>Save</button>
+                </footer>
+            </section>
 
-                <h3 id="management" class="pt-4 pb-2">Management</h3>
-                <p>Configure automated library management.</p>
-                <div class="mb-3 form-check form-switch">
-                    <input type="checkbox" class="form-check-input" id="deleteOlderUpdatesCheck">
-                    <label class="form-check-label" for="deleteOlderUpdatesCheck">Delete older updates</label>
+            <!-- Library management -->
+            <section class="adm-card" id="management" aria-labelledby="managementTitle">
+                <header class="adm-card-head">
+                    <h2 id="managementTitle">Library management</h2>
+                    <p>What Homefoil does to files once they are identified.</p>
+                </header>
+
+                <h3 class="adm-sub">Cleanup</h3>
+                {% call row('deleteOlderUpdatesCheck', 'Delete older updates', 'Removes an update once a newer version of it is in the library.') %}
+                    {{ switch('deleteOlderUpdatesCheck') }}
                     <a class="setting-stat d-none" id="outdatedStat" href="/admin/files#outdated"></a>
-                    <div class="form-text">Deletes older update files when a newer version is available in the library.</div>
-                </div>
-                <div class="mb-3 form-check form-switch">
-                    <input type="checkbox" class="form-check-input" id="deleteDuplicatesCheck">
-                    <label class="form-check-label" for="deleteDuplicatesCheck">Delete duplicate files</label>
+                {% endcall %}
+                {% call row('deleteDuplicatesCheck', 'Delete duplicate files', 'Keeps the best copy of identical content once every copy is verified and compressed. Files matched only by name are never deleted.') %}
+                    {{ switch('deleteDuplicatesCheck') }}
                     <a class="setting-stat d-none" id="duplicatesStat" href="/admin/files#duplicates"></a>
-                    <div class="form-text">When several files carry the same content, keeps the best copy and deletes
-                        the others, once they have all been verified and compressed. Intact files are preferred, then
-                        compressed and organized ones. Requires keys: files identified from their filename are
-                        never deleted.</div>
-                </div>
-                <div class="mb-3 form-check form-switch">
-                    <input type="checkbox" class="form-check-input" id="preferMulticontentCheck">
-                    <label class="form-check-label" for="preferMulticontentCheck">Prefer multi-content files</label>
-                    <div class="form-text">Prefer files bundling several contents over single-content copies of them,
-                        also applies for download.</div>
-                </div>
+                {% endcall %}
+                {% call row('preferMulticontentCheck', 'Prefer multi-content files', 'Favours bundles over single copies of the same content, for keeping and for downloads.') %}
+                    {{ switch('preferMulticontentCheck') }}
+                {% endcall %}
 
-                <h4 id="compression" class="py-2">File compression</h4>
-                <p>Compress files to save disk space after they are added and organized.</p>
-                <div class="row">
-                    <div class="col-7">
-                        <div class="mb-3 form-check form-switch">
-                            <input type="checkbox" class="form-check-input" id="compressFilesCheck">
-                            <label class="form-check-label" for="compressFilesCheck">Compress files</label>
-                            <div class="form-text">Compress files to <code>NSZ</code>/<code>XCZ</code> (<code>NSP</code>→<code>NSZ</code>,
-                                <code>XCI</code>→<code>XCZ</code>) after they are added and organized.
-                                Every compressed file is verified before the original is removed.</div>
-                        </div>
-                        <div class="row g-3 align-items-center mb-3">
-                            <div class="col-auto">
-                                <label class="col-form-label" for="compressionLevelInput">Compression level</label>
-                            </div>
-                            <div class="col-auto">
-                                <input type="number" min="1" max="22" class="form-control" id="compressionLevelInput" style="width:100px;">
-                            </div>
-                            <div class="col-12">
-                                <div class="form-text">zstandard level (<code>1</code>–<code>22</code>). Higher = smaller files but slower. Default: <code>18</code>.</div>
-                            </div>
-                        </div>
-                        <div class="accordion mb-3" id="compressionAdvancedAccordion">
-                            <div class="accordion-item">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                        data-bs-target="#compressionAdvanced" aria-expanded="false" aria-controls="compressionAdvanced">
-                                        Advanced compression options
-                                    </button>
-                                </h2>
-                                <div id="compressionAdvanced" class="accordion-collapse collapse" data-bs-parent="#compressionAdvancedAccordion">
-                                    <div class="accordion-body">
-                                        <div class="mb-3 form-check">
-                                            <input type="checkbox" class="form-check-input" id="compressLongDistanceCheck">
-                                            <label class="form-check-label" for="compressLongDistanceCheck">Long-distance mode</label>
-                                            <div class="form-text">Enables zstandard long-distance matching for a better ratio on large files, at higher memory use.</div>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="compressModeSelect" class="form-label">Compression mode:</label>
-                                            <select class="form-select" id="compressModeSelect">
-                                                <option value="auto">Auto (solid for NSP, block for XCI)</option>
-                                                <option value="solid">Solid (best ratio, not randomly readable)</option>
-                                                <option value="block">Block (random read access, slightly larger)</option>
-                                            </select>
-                                            <div class="form-text">Block compression allows streaming/mounting without full decompression.</div>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="compressBlockSizeInput" class="form-label">Block size exponent:</label>
-                                            <input type="number" class="form-control" min="14" max="32" id="compressBlockSizeInput">
-                                            <div class="form-text">Block size is <code>2^x</code> (<code>14</code>–<code>32</code>).
-                                                Default: <code>20</code> (<code>1 MB</code>). Only used in block mode.</div>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="compressThreadsInput" class="form-label">Threads per file:</label>
-                                            <input type="number" class="form-control" min="0" max="64" id="compressThreadsInput">
-                                            <div class="form-text">Threads each compression task uses (<code>0</code> = automatic). Note: this multiplies with the
-                                                number of workers — high values across many workers can oversubscribe the CPU.</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <h4 id="verification" class="py-2">File verification</h4>
-                <p>Check that files are original and intact. Requires valid console keys.</p>
-                <div class="row">
-                    <div class="col-7">
-                        <div class="mb-3 form-check form-switch">
-                            <input type="checkbox" class="form-check-input" id="verifyFilesCheck">
-                            <label class="form-check-label" for="verifyFilesCheck">Verify files</label>
-                            <a class="setting-stat d-none" id="verificationStat" href="/admin/files#verification"></a>
-                            <div class="form-text">Enable file verification: use <code>signature</code>
-                                verification to check origin, and <code>hash</code> verification to check integrity.</div>
-                        </div>
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="verificationDepth"
-                                       id="verificationDepthSignature" value="signature">
-                                <label class="form-check-label" for="verificationDepthSignature">Signature only</label>
-                                <div class="form-text">Checks that the container decrypts and that every
-                                    <code>NCA</code> header signature is Nintendo's.</div>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="verificationDepth"
-                                       id="verificationDepthHash" value="hash">
-                                <label class="form-check-label" for="verificationDepthHash">Full hash</label>
-                                <div class="form-text">Also hashes every byte of every <code>NCA</code> and
-                                    compares it against what the file claims, to ensure integrity.</div>
-                            </div>
-                        </div>
-                        <div class="alert alert-warning d-none" id="verificationKeysAlert" role="alert">
-                            Verification is disabled: no valid console keys are loaded.
-                        </div>
-                    </div>
-                </div>
-
-                <h4 id="organizer" class="py-2">Organizer</h4>
-                <p>Keep your library organized.</p>
-                <div class="row">
-                    <div class="col-7">
-                        <div class="mb-3 form-check form-switch">
-                            <input type="checkbox" class="form-check-input" id="organizerEnabledCheck">
-                            <label class="form-check-label" for="organizerEnabledCheck">Enable organizer</label>
-                            <div class="form-text">Enables automatic organization of identified files in the library, according to the templates below.</div>
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="removeEmptyFoldersCheck">
-                            <label class="form-check-label" for="removeEmptyFoldersCheck">Remove empty folders</label>
-                            <div class="form-text">Removes empty folders after organizing files.</div>
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="windowsCompatibleCheck">
-                            <label class="form-check-label" for="windowsCompatibleCheck">Windows compatible filenames</label>
-                            <div class="form-text">Ownfoil enforces filename sanitization depending on the OS running it. Enabling this will sanitize filenames with
-                                Windows compatible characters and keep paths within the Windows length limit, this is needed when acessing libraries from Windows systems (e.g. SMB/NFS mount).</div>
-                        </div>
-                    </div>
-                </div>
-
-                <h5 class="pb-3 pt-2">Templates</h5>
-                <p>The final computed paths will be relative to the root path of the library, the file extension is added automatically.</p>
-                <div class="row">
-                    <div class="col-7">
-                        <div class="mb-3">
-                            <label for="baseTemplateInput" class="form-label">Base template:</label>
-                            <input type="text" class="form-control form-control-code" id="baseTemplateInput">
-                        </div>
-                        <div class="mb-3">
-                            <label for="updateTemplateInput" class="form-label">Update template:</label>
-                            <input type="text" class="form-control form-control-code" id="updateTemplateInput">
-                        </div>
-                        <div class="mb-3">
-                            <label for="dlcTemplateInput" class="form-label">DLC template:</label>
-                            <input type="text" class="form-control form-control-code" id="dlcTemplateInput">
-                        </div>
-                        <div class="mb-3">
-                            <label for="multiTemplateInput" class="form-label">Multi-content template:</label>
-                            <input type="text" class="form-control form-control-code" id="multiTemplateInput">
-                        </div>
-                        <p class="text-break"><strong>Make sure the templates contain <code>[{appId}][v{appVersion}]</code> for Tinfoil to recognize the apps.</strong></p>
-                    </div>
-                    <div class="col-5">
-                        <div class="alert alert-dark">
-                            <p>Available attributes for all templates:</p>
-                            <ul>
-                                <li><code>{extension}</code>: File extension (e.g., <code>nsp</code>, <code>nsz</code>)</li>
-                                <li><code>{titleId}</code>: Title ID of the game</li>
-                                <li><code>{titleName}</code>: Name of the game title</li>
-                            </ul>
-                            <p>Available attributes for Base, Update, and DLC templates:</p>
-                            <ul>
-                                <li><code>{appId}</code>: Application ID</li>
-                                <li><code>{appVersion}</code>: Application version</li>
-                                <li><code>{patchLevel}</code>: Patch level</li>
-                                <li><code>{appName}</code>: Name of the application (title or DLC name)</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <button type="button" id="submitLibraryManagementSettingsBtn" class="btn btn-primary"
-                        onClick='submitLibraryManagementSettings()'>Submit</button>
-                </div>
-
-                <hr class="hr-settings">
-                <h2 class="pb-2">Titles</h2>
-                <p>Titles identification configuration.</p>
-                <div class="row mb-4">
-                    <div class="col">
-                        <label for="selectRegion" class="form-label">Library Region:</label>
-                        <select id="selectRegion" class="form-select" aria-label="Select library region">
+                <h3 class="adm-sub" id="compression">Compression</h3>
+                {% call row('compressFilesCheck', 'Compress files', '<code>NSP</code> to <code>NSZ</code>, <code>XCI</code> to <code>XCZ</code>. Each result is verified before the original is removed.') %}
+                    {{ switch('compressFilesCheck') }}
+                {% endcall %}
+                {% call row('compressionLevelInput', 'Compression level', 'zstd level 1–22: higher is smaller but slower. Default 18.') %}
+                    <input type="number" min="1" max="22" class="form-control adm-narrow" id="compressionLevelInput">
+                {% endcall %}
+                <button class="adm-more" type="button" data-bs-toggle="collapse" data-bs-target="#compressionAdvanced"
+                    aria-expanded="false" aria-controls="compressionAdvanced">
+                    <i class="bi bi-chevron-down" aria-hidden="true"></i>Advanced compression options
+                </button>
+                <div id="compressionAdvanced" class="collapse">
+                    {% call row('compressLongDistanceCheck', 'Long-distance mode', 'Better ratio on large files, at higher memory use.') %}
+                        {{ switch('compressLongDistanceCheck') }}
+                    {% endcall %}
+                    {% call row('compressModeSelect', 'Compression mode', 'Block mode can be streamed or mounted without decompressing first.') %}
+                        <select class="form-select" id="compressModeSelect">
+                            <option value="auto">Auto (solid for NSP, block for XCI)</option>
+                            <option value="solid">Solid (best ratio, not randomly readable)</option>
+                            <option value="block">Block (random read access, slightly larger)</option>
                         </select>
-                    </div>
-                    <div class="col">
-                        <label for="selectLanguage" class="form-label">Library Language:</label>
-                        <select id="selectLanguage" class="form-select" aria-label="Select library language">
-                        </select>
-                    </div>
-                    <div id="selectRegionLanguageHelp" class="form-text">Region and Language used to get games
-                        informations.</div>
+                    {% endcall %}
+                    {% call row('compressBlockSizeInput', 'Block size exponent', 'Blocks of 2<sup>x</sup> bytes, 14–32. Default 20 (1 MB). Block mode only.') %}
+                        <input type="number" class="form-control adm-narrow" min="14" max="32" id="compressBlockSizeInput">
+                    {% endcall %}
+                    {% call row('compressThreadsInput', 'Threads per file', '0 is automatic. Multiplies with the worker count, so keep it modest.') %}
+                        <input type="number" class="form-control adm-narrow" min="0" max="64" id="compressThreadsInput">
+                    {% endcall %}
                 </div>
 
-                <div class="row mb-3">
-                    <!-- Console key upload form -->
-                    <div class="col-6">
-                        <label id="consoleKeysInputLabel" for="consoleKeysInput" class="form-label">Console Keys file:</label>
-                        <input class="form-control" type="file"
-                            accept=".keys,.txt" id="consoleKeysInput">
-                        <div id="consoleKeysFeedback">
+                <h3 class="adm-sub" id="verification">Verification</h3>
+                {% call row('verifyFilesCheck', 'Verify files', 'Checks that files are original and intact. Needs console keys.') %}
+                    {{ switch('verifyFilesCheck') }}
+                    <a class="setting-stat d-none" id="verificationStat" href="/admin/files#verification"></a>
+                {% endcall %}
+                {% call row('', 'Depth') %}
+                    <div role="radiogroup" aria-label="Verification depth">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="verificationDepth"
+                                   id="verificationDepthSignature" value="signature">
+                            <label class="form-check-label" for="verificationDepthSignature">Signature only</label>
+                            <div class="adm-help">Every <code>NCA</code> header is signed by Nintendo.</div>
                         </div>
-                        <div id="consoleKeysHelp" class="form-text">Console keys are required to decrypt any Nintendo
-                            content, including
-                            backups. Ownfoil uses this to identify files, regardless of the filename.
-                        </div>
-                    </div>
-
-                    <!-- Missing console keys -->
-                    <div class="col-6">
-                        <label for="keysAlert" class="form-label">Master key revisions:</label>
-                        <div id="keysAlert" class="alert alert-secondary py-2 mb-0">
-                            <p id="keysMissingLabel" class="mb-0"></p>
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="radio" name="verificationDepth"
+                                   id="verificationDepthHash" value="hash">
+                            <label class="form-check-label" for="verificationDepthHash">Full hash</label>
+                            <div class="adm-help">Also hashes every byte, so corruption is caught. Slower.</div>
                         </div>
                     </div>
-                </div>
+                {% endcall %}
+                <p class="adm-note adm-note-warn d-none" id="verificationKeysAlert" role="alert">
+                    Verification is off until valid console keys are loaded.</p>
 
-                <div class="mb-3">
-                    <button type="button" id="submitTitlesSettingsBtn" class="btn btn-primary"
-                        onClick='submitTitlesSettings()'>Submit</button>
-                </div>
-                </form>
-                <hr class="hr-settings">
+                <h3 class="adm-sub" id="organizer">Organizer</h3>
+                {% call row('organizerEnabledCheck', 'Organize files', 'Moves identified files to the paths set by the templates below.') %}
+                    {{ switch('organizerEnabledCheck') }}
+                {% endcall %}
+                {% call row('removeEmptyFoldersCheck', 'Remove empty folders', 'Cleans up folders left empty after moving files.') %}
+                    {{ switch('removeEmptyFoldersCheck') }}
+                {% endcall %}
+                {% call row('windowsCompatibleCheck', 'Windows-safe filenames', 'Needed when the library is opened from Windows, for example over SMB.') %}
+                    {{ switch('windowsCompatibleCheck') }}
+                {% endcall %}
 
-                <h2 class="pb-2">Local artworks</h2>
-                <p>For your shop to be fully self-hosted and not rely on external sources, Ownfoil can download
-                    all artworks locally and serve them to clients. Instead of providing direct eShop links,
-                    your Switch will retrieve them from your server and never connect to Nintendo's servers.</p>
-                <div class="mb-3 form-check form-switch">
-                    <input type="checkbox" class="form-check-input" id="localMediaEnabledCheck">
-                    <label class="form-check-label" for="localMediaEnabledCheck">Download artwork locally</label>
+                <p class="adm-help adm-sub-note">Paths are relative to the library folder and the extension is added for you.
+                    Keep <code>[{appId}][v{appVersion}]</code> in them so Tinfoil recognises the files.</p>
+                {% call row('baseTemplateInput', 'Base games') %}
+                    <input type="text" class="form-control form-control-code" id="baseTemplateInput">
+                {% endcall %}
+                {% call row('updateTemplateInput', 'Updates') %}
+                    <input type="text" class="form-control form-control-code" id="updateTemplateInput">
+                {% endcall %}
+                {% call row('dlcTemplateInput', 'DLC') %}
+                    <input type="text" class="form-control form-control-code" id="dlcTemplateInput">
+                {% endcall %}
+                {% call row('multiTemplateInput', 'Multi-content files') %}
+                    <input type="text" class="form-control form-control-code" id="multiTemplateInput">
+                {% endcall %}
+                <details class="adm-details">
+                    <summary>Template variables</summary>
+                    <dl>
+                        <dt><code>{titleId}</code> <code>{titleName}</code> <code>{extension}</code></dt>
+                        <dd>Title ID, game name and file extension. Every template.</dd>
+                        <dt><code>{appId}</code> <code>{appVersion}</code> <code>{patchLevel}</code> <code>{appName}</code></dt>
+                        <dd>Application ID, version, patch level and name (game or DLC). Base, update and DLC templates.</dd>
+                    </dl>
+                </details>
+
+                <footer class="adm-card-foot">
+                    <button type="button" id="submitLibraryManagementSettingsBtn" class="sx-btn sx-btn--primary"
+                        onClick='submitLibraryManagementSettings()'>Save</button>
+                </footer>
+            </section>
+
+            <!-- Titles and keys -->
+            <section class="adm-card" id="titles" aria-labelledby="titlesTitle">
+                <header class="adm-card-head">
+                    <h2 id="titlesTitle">Titles and keys</h2>
+                    <p>Where game info comes from, and the keys that identify your files.</p>
+                </header>
+                {% call row('selectRegion', 'Region and language', 'Used for game names, descriptions and artwork.') %}
+                    <div class="adm-pair" id="selectRegionLanguageHelp">
+                        <select id="selectRegion" class="form-select" aria-label="Region"></select>
+                        <select id="selectLanguage" class="form-select" aria-label="Language"></select>
+                    </div>
+                {% endcall %}
+                <div class="adm-row">
+                    <div class="adm-row-text">
+                        <label id="consoleKeysInputLabel" for="consoleKeysInput" class="adm-label">Console keys</label>
+                        <p id="consoleKeysHelp" class="adm-help">The <code>prod.keys</code> file from your Switch, so files are
+                            identified by content rather than name.
+                            <a target="_blank" rel="noopener" href="https://gitea.com/KudbiOdd/easy-switch-hacking-shise/wiki/Dump-device-keys">How to get it</a></p>
+                    </div>
+                    <div class="adm-row-control">
+                        <input class="form-control" type="file" accept=".keys,.txt" id="consoleKeysInput">
+                        <div id="consoleKeysFeedback"></div>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <a class="link-secondary" data-bs-toggle="collapse" href="#mediaUsage" role="button"
-                        aria-expanded="false" aria-controls="mediaUsage">Disk usage</a>
-                </div>
+                {% call row('', 'Master key revisions') %}
+                    <div id="keysAlert" class="adm-keys">
+                        <p id="keysMissingLabel" class="mb-0"></p>
+                    </div>
+                {% endcall %}
+
+                <footer class="adm-card-foot">
+                    <button type="button" id="submitTitlesSettingsBtn" class="sx-btn sx-btn--primary"
+                        onClick='submitTitlesSettings()'>Save</button>
+                </footer>
+            </section>
+
+            <!-- Artwork -->
+            <section class="adm-card" id="artwork" aria-labelledby="artworkTitle">
+                <header class="adm-card-head">
+                    <h2 id="artworkTitle">Artwork</h2>
+                    <p>Serve game artwork from this server, so your Switch never contacts Nintendo for it.</p>
+                </header>
+                {% call row('localMediaEnabledCheck', 'Download artwork locally') %}
+                    {{ switch('localMediaEnabledCheck') }}
+                {% endcall %}
+                <button class="adm-more" type="button" data-bs-toggle="collapse" data-bs-target="#mediaUsage"
+                    aria-expanded="false" aria-controls="mediaUsage">
+                    <i class="bi bi-chevron-down" aria-hidden="true"></i>Disk usage
+                </button>
                 <div class="collapse" id="mediaUsage">
                     <div class="table-responsive">
-                        <table class="table table-hover caption-top" id="mediaUsageTable">
+                        <table class="table adm-table caption-top" id="mediaUsageTable">
                             <caption id="mediaUsageCaption"></caption>
                             <thead>
                                 <tr>
                                     <th scope="col">Type</th>
                                     <th scope="col">Original</th>
+                                    <th scope="col">Thumbnail</th>
                                     <th scope="col">Client</th>
+                                    <th scope="col">Screen</th>
                                     <th scope="col">Total</th>
                                 </tr>
                             </thead>
@@ -485,156 +361,141 @@
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <button type="button" id="submitLocalMediaSettingsBtn" class="btn btn-primary"
-                        onClick='submitLocalMediaSettings()'>Submit</button>
-                </div>
+                <footer class="adm-card-foot">
+                    <button type="button" id="submitLocalMediaSettingsBtn" class="sx-btn sx-btn--primary"
+                        onClick='submitLocalMediaSettings()'>Save</button>
+                </footer>
+            </section>
 
-                <hr class="hr-settings">
-                <h2 class="pb-2">Shop</h2>
-                <p>Shop configuration and customization.</p>
-                <!-- Shop name -->
-                <div class="mb-3">
-                    <label for="shopNameInput" class="form-label">Shop name:</label>
-                    <input class="form-control" id="shopNameInput" aria-describedby="shopNameHelp"
-                        placeholder="Ownfoil">
-                    <div id="shopNameHelp" class="form-text">Name displayed by clients for your shop.</div>
-                </div>
-                <!-- Shop URL -->
-                <div class="mb-3">
-                    <label for="shopHostInput" class="form-label">Shop URL:</label>
-                    <input class="form-control" id="shopHostInput" aria-describedby="shopHostHelp"
-                        placeholder="shop.domain.tld">
-                    <div id="shopHostHelp" class="form-text">Configure your shop URL to enable host verification.<br>
-                        Host verification from client requests will be enforced if the shop is accessed securely (with
-                        <code>https</code>), make sure your reverse proxy <strong>does NOT</strong> allow insecure
-                        connections (or upgrades them to use SSL) and correctly sets the <code>X-Forwarded-Proto</code>
-                        header.
-                    </div>
-                </div>
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="publicShopCheck"
-                        aria-describedby="publicShopCheckHelp">
-                    <label class="form-check-label" for="publicShopCheck">Public shop</label>
-                    <div id="publicShopCheckHelp" class="form-text">If enabled, Shop access from clients does not
-                        require authentication.
-                    </div>
-                </div>
+            <!-- Shop and clients -->
+            <section class="adm-card" id="shop" aria-labelledby="shopTitle">
+                <header class="adm-card-head">
+                    <h2 id="shopTitle">Shop and clients</h2>
+                    <p>How the shop looks to Switch clients and who may open it.</p>
+                </header>
+                {% call row('shopNameInput', 'Shop name', 'Shown by clients.') %}
+                    <input class="form-control" id="shopNameInput" aria-describedby="shopNameHelp" placeholder="Homefoil">
+                    <div id="shopNameHelp"></div>
+                {% endcall %}
+                {% call row('shopHostInput', 'Shop URL', 'Turns on host verification. Behind HTTPS, make sure your proxy refuses plain HTTP and sets <code>X-Forwarded-Proto</code>.') %}
+                    <input class="form-control" id="shopHostInput" aria-describedby="shopHostHelp" placeholder="shop.domain.tld">
+                    <div id="shopHostHelp"></div>
+                {% endcall %}
+                {% call row('publicShopCheck', 'Public shop', 'Clients can open the shop without signing in.') %}
+                    {{ switch('publicShopCheck') }}
+                {% endcall %}
+                {% call row('shopMotdTextArea', 'Message of the day', 'Shown in clients after the shop loads.') %}
+                    <textarea class="form-control" id="shopMotdTextArea" rows="3" aria-describedby="shopMotdTextAreaHelp"></textarea>
+                    <div id="shopMotdTextAreaHelp"></div>
+                {% endcall %}
 
-                <div class="mb-3">
-                    <label for="shopMotdTextArea" class="form-label">Message of the day:</label>
-                    <textarea class="form-control" id="shopMotdTextArea" rows="3"></textarea>
-                    <div id="shopMotdTextAreaHelp" class="form-text">Message presented in clients after
-                        successfully loading your shop.</div>
-                </div>
+                <h3 class="adm-sub">Clients</h3>
+                {% call row('tinfoilEnabledCheck', 'Tinfoil') %}
+                    {{ switch('tinfoilEnabledCheck') }}
+                {% endcall %}
+                {% call row('tinfoilEncryptShopCheck', 'Encrypt for Tinfoil', 'Only Tinfoil can read the shop. Recommended.') %}
+                    {{ switch('tinfoilEncryptShopCheck') }}
+                {% endcall %}
+                {% call row('sphairaEnabledCheck', 'Sphaira') %}
+                    {{ switch('sphairaEnabledCheck') }}
+                {% endcall %}
+                {% call row('cyberfoilEnabledCheck', 'CyberFoil') %}
+                    {{ switch('cyberfoilEnabledCheck') }}
+                {% endcall %}
 
-                <h4 class="pt-3 pb-2">Clients</h4>
-                <h5 class="pb-2">Tinfoil</h5>
-                <div class="mb-3 form-check form-switch">
-                    <input type="checkbox" class="form-check-input" id="tinfoilEnabledCheck"
-                        aria-describedby="tinfoilEnabledCheckHelp">
-                    <label class="form-check-label" for="tinfoilEnabledCheck">Enabled</label>
-                    <div id="tinfoilEnabledCheckHelp" class="form-text">Enable or disable Tinfoil client access to the shop.</div>
-                </div>
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="tinfoilEncryptShopCheck"
-                        aria-describedby="tinfoilEncryptShopCheckHelp">
-                    <label class="form-check-label" for="tinfoilEncryptShopCheck">Encrypt shop</label>
-                    <div id="tinfoilEncryptShopCheckHelp" class="form-text">Serve encrypted and compressed shop, so that only Tinfoil clients
-                        can access the content. <strong>Strongly suggested to enable it for security</strong>.</div>
-                </div>
+                <footer class="adm-card-foot">
+                    <button type="button" id="submitShopSettingsBtn" class="sx-btn sx-btn--primary"
+                        onClick='submitShopSettings()'>Save</button>
+                </footer>
+            </section>
 
-                <h5 class="pb-2">Sphaira</h5>
-                <div class="mb-3 form-check form-switch">
-                    <input type="checkbox" class="form-check-input" id="sphairaEnabledCheck"
-                        aria-describedby="sphairaEnabledCheckHelp">
-                    <label class="form-check-label" for="sphairaEnabledCheck">Enabled</label>
-                    <div id="sphairaEnabledCheckHelp" class="form-text">Enable or disable Sphaira client access to the shop.</div>
-                </div>
+            <!-- Schedule -->
+            <section class="adm-card" id="schedule" aria-labelledby="scheduleTitle">
+                <header class="adm-card-head">
+                    <h2 id="scheduleTitle">Schedule</h2>
+                    <p>Jobs that run on their own, on a timer.</p>
+                </header>
+                {% call row('titledbUpdateIntervalInput', 'TitleDB refresh', 'Refreshes TitleDB and re-processes the library. Write <code>30m</code>, <code>2h</code> or <code>1d</code>; <code>0</code> turns it off.') %}
+                    <input type="text" class="form-control adm-narrow" id="titledbUpdateIntervalInput" aria-describedby="titledbUpdateIntervalHelp" placeholder="2h">
+                    <div id="titledbUpdateIntervalFeedback"></div>
+                    <div id="titledbUpdateIntervalHelp"></div>
+                {% endcall %}
 
-                <h5 class="pb-2">CyberFoil</h5>
-                <div class="mb-3 form-check form-switch">
-                    <input type="checkbox" class="form-check-input" id="cyberfoilEnabledCheck"
-                        aria-describedby="cyberfoilEnabledCheckHelp">
-                    <label class="form-check-label" for="cyberfoilEnabledCheck">Enabled</label>
-                    <div id="cyberfoilEnabledCheckHelp" class="form-text">Enable or disable CyberFoil client access to the shop.</div>
-                </div>
+                <footer class="adm-card-foot">
+                    <button type="button" id="submitSchedulerSettingsBtn" class="sx-btn sx-btn--primary"
+                        onClick='submitSchedulerSettings()'>Save</button>
+                </footer>
+            </section>
 
-                <div class="mb-3">
-                    <button type="button" id="submitShopSettingsBtn" class="btn btn-primary"
-                        onClick='submitShopSettings()'>Submit</button>
-                </div>
+            <!-- Workers -->
+            <section class="adm-card" id="workers" aria-labelledby="workersTitle">
+                <header class="adm-card-head">
+                    <h2 id="workersTitle">Workers</h2>
+                    <p>How much background work runs at once.</p>
+                </header>
+                {% call row('workerCountInput', 'Worker processes', 'Run tasks such as scans and identification in parallel.') %}
+                    <input type="number" class="form-control adm-narrow" id="workerCountInput" min="1" step="1">
+                    <div id="workerCountFeedback"></div>
+                {% endcall %}
+                {% call row('ioLimitInput', 'Disk tasks at once', 'Compression and verification. 1 for a hard drive or network share, 2–3 for a SATA SSD, more for NVMe with spare cores.') %}
+                    <input type="number" class="form-control adm-narrow" id="ioLimitInput" min="1" step="1">
+                    <div id="ioLimitFeedback"></div>
+                {% endcall %}
+                {% call row('netLimitInput', 'Downloads at once', 'Artwork downloads.') %}
+                    <input type="number" class="form-control adm-narrow" id="netLimitInput" min="1" step="1">
+                    <div id="netLimitFeedback"></div>
+                {% endcall %}
 
-                
-                <hr class="hr-settings">
-                <h2 class="pb-2">Scheduler</h2>
-                <p>Configure the periodic jobs. Interval format is <code>number + unit</code>  (e.g., <code>2h</code>, <code>30m</code>, <code>1d</code>), with units: <code>s</code> (seconds), <code>m</code> (minutes), <code>h</code> (hours), <code>d</code> (days). Set to <code>0</code> to disable.</p>
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <label for="titledbUpdateIntervalInput" class="form-label">TitleDB update interval:</label>
-                        <input type="text" class="form-control" id="titledbUpdateIntervalInput" aria-describedby="titledbUpdateIntervalHelp" placeholder="2h">
-                        <div id="titledbUpdateIntervalFeedback"></div>
-                        <div id="titledbUpdateIntervalHelp" class="form-text">How often to automatically refresh TitleDB and re-process the library.</div>
-                    </div>
-                </div>
+                <footer class="adm-card-foot">
+                    <button type="button" id="submitWorkerSettingsBtn" class="sx-btn sx-btn--primary"
+                        onClick='submitWorkerSettings()'>Save</button>
+                </footer>
+            </section>
 
-                <div class="mb-3">
-                    <button type="button" id="submitSchedulerSettingsBtn" class="btn btn-primary"
-                        onClick='submitSchedulerSettings()'>Submit</button>
-                </div>
+        </div>
 
-                <hr class="hr-settings">
-                <h2 class="pb-2">Workers</h2>
-                <p>Configure the number of task worker processes. More workers allow parallel processing of tasks (e.g., scanning, identifying files).</p>
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <label for="workerCountInput" class="form-label">Worker count:</label>
-                        <input type="number" class="form-control" id="workerCountInput" min="1" step="1">
-                        <div id="workerCountFeedback"></div>
-                        <div id="workerCountHelp" class="form-text">Number of worker processes.</div>
-                    </div>
+    <!-- Delete user modal -->
+    <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="deleteUserModalLabel">Delete user</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <label for="ioLimitInput" class="form-label">Max concurrent I/O tasks:</label>
-                        <input type="number" class="form-control" id="ioLimitInput" min="1" step="1">
-                        <div id="ioLimitFeedback"></div>
-                        <div id="ioLimitHelp" class="form-text">
-                            How many disk-heavy tasks (compression, decompression, verification) run at once,
-                            independent of worker count. Reading several multi-GB files in parallel from one
-                            disk makes the heads seek back and forth and can collapse throughput, so more is
-                            not always faster.
-                            Pick based on where your library lives:
-                            <ul class="mb-0">
-                                <li><strong>Network share or a single hard drive (HDD): 1</strong> — avoids seek
-                                    thrashing; the safe default.</li>
-                                <li><strong>SATA SSD: 2–3</strong> — no seek penalty, so limited by CPU.</li>
-                                <li><strong>NVMe with spare CPU cores: raise toward your core count</strong> — each
-                                    compression uses ~3–4 threads, so the CPU, not the disk, is the ceiling.</li>
-                            </ul>
-                        </div>
-                    </div>
+                <div class="modal-body">
+                    ...
                 </div>
-
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <label for="netLimitInput" class="form-label">Max concurrent network tasks:</label>
-                        <input type="number" class="form-control" id="netLimitInput" min="1" step="1">
-                        <div id="netLimitFeedback"></div>
-                        <div id="netLimitHelp" class="form-text">
-                            How many artwork downloads run at once, independent of worker count.
-                        </div>
-                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Delete</button>
                 </div>
-
-                <div class="mb-3">
-                    <button type="button" id="submitWorkerSettingsBtn" class="btn btn-primary"
-                        onClick='submitWorkerSettings()'>Submit</button>
-                </div>
-
             </div>
+        </div>
+    </div>
+
+    <!-- Delete path modal -->
+    <div class="modal fade" id="deletePathModal" tabindex="-1" aria-labelledby="deletePathModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="deletePathModalLabel">Remove library folder</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    ...
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Remove</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
+
 
 {% block panel_scripts %}
 <script src="{{ url_for('static', filename='js/format.js') }}"></script>
@@ -673,7 +534,7 @@
         if (!target) return;
         const control = target.matches('input, select, textarea, button') ? target
             : target.htmlFor ? document.getElementById(target.htmlFor) : null;
-        const block = (control || target).closest('.form-check, .mb-3') || target;
+        const block = (control || target).closest('.adm-row, .form-check, .mb-3') || target;
         const centre = () => block.scrollIntoView({block: 'center'});
         centre();
         if (control) control.focus({preventScroll: true});

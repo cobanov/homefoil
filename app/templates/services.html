@@ -1,32 +1,38 @@
 {% extends "settings_layout.html" %}
 {% block panel %}
-            <div class="settings-container container mt-3">
+<div class="settings-container adm-page">
+    <header class="adm-head">
+        <h1>Services</h1>
+        <p>Extra ways for Switch clients to reach this server.</p>
+    </header>
 
-                <h2 class="pb-2">Discovery</h2>
-                <p>Let clients find this shop on the local network by themselves, instead of having to
-                    enter the address and port.</p>
-                <div class="alert alert-warning" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                    <strong>When running Ownfoil with Docker</strong>, discovery only works if the container uses the
-                    host network: <code>--network host</code> with <code>docker run</code>, or
-                    <code>network_mode: host</code> with Docker compose.
-                </div>
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="discoveryEnabledCheck"
-                        aria-describedby="discoveryEnabledCheckHelp">
-                    <label class="form-check-label" for="discoveryEnabledCheck">Enabled</label>
-                    <div id="discoveryEnabledCheckHelp" class="form-text">Ownfoil answers discovery requests
-                        broadcast on UDP port <code>{{ discovery_port }}</code> with the server configuration,
-                        so it can be setup directly.
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <button type="button" id="submitServicesSettingsBtn" class="btn btn-primary"
-                        onClick='submitServicesSettings()'>Submit</button>
-                </div>
-
+    <section class="adm-card" id="discovery" aria-labelledby="discoveryTitle">
+        <header class="adm-card-head">
+            <h2 id="discoveryTitle">Discovery</h2>
+            <p>Clients on your network find the shop by themselves, without typing an address and port.</p>
+        </header>
+        <div class="adm-row">
+            <div class="adm-row-text">
+                <label class="adm-label" for="discoveryEnabledCheck">Answer discovery requests</label>
+                <p id="discoveryEnabledCheckHelp" class="adm-help">Replies to broadcasts on UDP port
+                    <code>{{ discovery_port }}</code> with this server's address.</p>
             </div>
+            <div class="adm-row-control">
+                <div class="form-check form-switch m-0">
+                    <input type="checkbox" class="form-check-input" role="switch" id="discoveryEnabledCheck"
+                        aria-describedby="discoveryEnabledCheckHelp">
+                </div>
+            </div>
+        </div>
+        <p class="adm-note adm-note-warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+            In Docker, discovery needs the host network: <code>--network host</code> or <code>network_mode: host</code>.</p>
+
+        <footer class="adm-card-foot">
+            <button type="button" id="submitServicesSettingsBtn" class="sx-btn sx-btn--primary"
+                onClick='submitServicesSettings()'>Save</button>
+        </footer>
+    </section>
+</div>
 {% endblock %}
 
 {% block panel_scripts %}

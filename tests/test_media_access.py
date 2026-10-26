@@ -108,7 +108,7 @@ def test_an_anonymous_caller_is_told_how_to_authenticate(stored):
     response = stored.client.get(URL)
 
     assert response.status_code == 401
-    assert response.headers["WWW-Authenticate"] == 'Basic realm="Ownfoil"'
+    assert response.headers["WWW-Authenticate"] == 'Basic realm="Homefoil"'
 
 
 # public shop, the directive the response carries, the one it must not, the Vary it needs.

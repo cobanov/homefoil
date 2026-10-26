@@ -19,6 +19,7 @@ import pytest
 import db as db_mod
 import titledb
 from app import create_app
+from auth import init_users
 from db import db, init_db, Titles
 from gql import graphql_dispatch
 
@@ -60,12 +61,18 @@ def first_run(tmp_path, monkeypatch):
     app.add_url_rule("/api/graphql", view_func=graphql_dispatch, methods=["GET", "POST"])
 
     init_db(app)  # what both entrypoints run before the server accepts requests
+    init_users(app)
 
     # Seeded in its own context so requests get theirs, as they do under the real server.
     with app.app_context():
         db.session.add(Titles(title_id=TITLE_ID, have_base=True))
         db.session.commit()
-    yield types.SimpleNamespace(app=app, client=app.test_client(), titledb_dir=titledb_dir)
+
+    # The UI's first queries come once the owner is past the default admin/admin login.
+    client = app.test_client()
+    client.post("/login", data={"user": "admin", "password": "admin"})
+    client.post("/password", data={"password": "ownerpass1", "confirm": "ownerpass1"})
+    yield types.SimpleNamespace(app=app, client=client, titledb_dir=titledb_dir)
 
 
 def _query(client, query):

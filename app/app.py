@@ -218,7 +218,7 @@ def use_seekable_file_wrapper_for_range_requests():
 @app.context_processor
 def inject_shop_name():
     """Templates show the configured shop name, not the product name."""
-    return {'shop_name': get_settings()['shop']['name'] or 'Ownfoil'}
+    return {'shop_name': get_settings()['shop']['name'] or 'Homefoil'}
 
 
 @app.route('/site.webmanifest')

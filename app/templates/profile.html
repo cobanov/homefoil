@@ -1,7 +1,13 @@
 {% extends "base.html" %}
-
 {% block content %}
-<h1 class="title">
-  Welcome, Anthony!
-</h1>
+{% include 'nav.html' %}
+<div class="setting-body">
+    <div class="settings-panel adm-page">
+        <header class="adm-head">
+            <h1>{{ current_user.user }}</h1>
+            <p>Your Homefoil account.</p>
+        </header>
+        <a class="sx-btn sx-btn--quiet" href="/password">Change password</a>
+    </div>
+</div>
 {% endblock %}

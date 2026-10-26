@@ -1,46 +1,45 @@
 {% extends "settings_layout.html" %}
 {% block panel %}
-<div class="settings-container container mt-3">
+<div class="settings-container adm-page">
 
-    <div class="task-section-head">
-        <h2 class="mb-0">Stats</h2>
-        <button type="button" id="refreshStats" class="icon-btn ms-auto" onClick="loadStats()"
-                title="Refresh">
-            <i class="bi bi-arrow-clockwise"></i>
+    <header class="adm-head">
+        <h1>Stats</h1>
+        <p>Library-wide figures, counted when the page loaded.</p>
+        <button type="button" id="refreshStats" class="sx-btn sx-btn--quiet adm-head-btn" onClick="loadStats()">
+            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>Refresh
         </button>
-    </div>
-    <p class="text-secondary">Library-wide figures, counted at the moment the page loaded.</p>
+    </header>
 
     <div id="statTiles" class="stat-grid"></div>
 
     <div class="stat-sections mt-4">
-        <section>
-            <h4 class="mb-3">Extensions</h4>
-            <table class="table table-sm stat-table">
+        <section class="adm-card">
+            <h2 class="adm-section-title pb-3">Extensions</h2>
+            <table class="table table-sm adm-table stat-table">
                 <thead><tr><th>Extension</th><th>Files</th><th>Size</th></tr></thead>
                 <tbody id="byExtension"></tbody>
             </table>
         </section>
 
-        <section>
-            <h4 class="mb-3">Libraries</h4>
-            <table class="table table-sm stat-table">
+        <section class="adm-card">
+            <h2 class="adm-section-title pb-3">Libraries</h2>
+            <table class="table table-sm adm-table stat-table">
                 <thead><tr><th>Path</th><th>Files</th><th>Size</th></tr></thead>
                 <tbody id="byLibrary"></tbody>
             </table>
         </section>
 
-        <section>
-            <h4 class="mb-3">Verification status</h4>
-            <table class="table table-sm stat-table">
+        <section class="adm-card">
+            <h2 class="adm-section-title pb-3">Verification status</h2>
+            <table class="table table-sm adm-table stat-table">
                 <thead><tr><th>Status</th><th>Files</th><th>Size</th></tr></thead>
                 <tbody id="byVerification"></tbody>
             </table>
         </section>
 
-        <section>
-            <h4 class="mb-3">App types</h4>
-            <table class="table table-sm stat-table">
+        <section class="adm-card">
+            <h2 class="adm-section-title pb-3">App types</h2>
+            <table class="table table-sm adm-table stat-table">
                 <thead><tr><th>Type</th><th>Tracked</th><th>Owned</th></tr></thead>
                 <tbody id="byAppType"></tbody>
             </table>
@@ -76,7 +75,7 @@
         return [
             ['Files', count(s.totalFiles), `${count(s.identifiedFiles)} identified`],
             ['Total size', formatBytes(s.totalSize), 'across every library'],
-            ['Unidentified', count(s.unidentifiedFiles), 'files ownfoil could not match'],
+            ['Unidentified', count(s.unidentifiedFiles), 'files Homefoil could not match'],
             ['Owned titles', count(s.ownedTitles), `of ${count(s.totalTitles)} in the catalogue`],
             ['Complete', count(s.completeTitles), 'owned titles with every DLC'],
             ['Up to date', count(s.upToDateTitles), 'owned titles on the latest update'],

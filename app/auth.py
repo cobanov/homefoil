@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, jsonify
-from flask_login import login_user, login_required, logout_user, current_user
+from flask_login import login_user, login_required, logout_user, current_user, COOKIE_NAME
 from werkzeug.security import generate_password_hash, check_password_hash
-from functools import wraps
+from functools import lru_cache, wraps
 from db import *
 from settings import get_settings
 from flask_login import LoginManager
@@ -131,6 +131,16 @@ def validate_username(username):
 def admin_account_created():
     return len(User.query.filter_by(admin_access=True).all())
 
+# The account init_users creates on an install with no users, to be changed at the first login.
+DEFAULT_ADMIN = 'admin'
+DEFAULT_PASSWORD = 'admin'
+
+# Keyed by the stored hash, failures included (verify_password caches only successes): a
+# password change stores a new hash, so this costs one scrypt per hash rather than per request.
+@lru_cache(maxsize=256)
+def is_default_password(pwhash):
+    return check_password_hash(pwhash, DEFAULT_PASSWORD)
+
 def unauthorized_json():
     response = login_manager.unauthorized()
     resp = {
@@ -227,13 +237,26 @@ def shop_access_denied(error, user):
     status = 403 if user else 401
     response = jsonify({'error': error})
     if status == 401:
-        response.headers['WWW-Authenticate'] = 'Basic realm="Ownfoil"'
+        response.headers['WWW-Authenticate'] = 'Basic realm="Homefoil"'
     return response, status
 
 auth_blueprint = Blueprint('auth', __name__)
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
+
+# What a session still on the default password may reach: the pages to change it or leave.
+PASSWORD_CHANGE_ENDPOINTS = {'auth.change_password', 'auth.login', 'auth.logout', 'static', 'webmanifest'}
+
+@auth_blueprint.before_app_request
+def require_password_change():
+    """Send a web session on the default password to change it. Shop clients use Basic Auth, never the session."""
+    if (request.endpoint in PASSWORD_CHANGE_ENDPOINTS or not current_user.is_authenticated
+            or not is_default_password(current_user.password)):
+        return None
+    if request.path.startswith('/api/') or request.is_json:
+        return jsonify({'error': 'The default password must be changed first.'}), 403
+    return redirect(url_for('auth.change_password', next=request.path))
 
 def create_or_update_user(username, password, admin_access=False, shop_access=False, backup_access=False):
     """
@@ -297,6 +320,13 @@ def init_users(app):
             init_user_from_environment(environment_name="USER_ADMIN", admin=True)
         if os.environ.get('USER_GUEST_NAME') is not None:
             init_user_from_environment(environment_name="USER_GUEST", admin=False)
+        if User.query.first() is None:
+            # Not create_or_update_user: validate_password is for the passwords people choose.
+            db.session.add(User(user=DEFAULT_ADMIN, password=generate_password_hash(DEFAULT_PASSWORD, method='scrypt'),
+                                admin_access=True, shop_access=True, backup_access=True))
+            db.session.commit()
+            logger.warning(f'No user accounts: created the default admin account {DEFAULT_ADMIN}/{DEFAULT_PASSWORD}, '
+                           'its password must be changed at the first login.')
 
 def local_url(url):
     """url if it is a path on this server, else '/': `next` must not send a login elsewhere."""
@@ -310,7 +340,9 @@ def login():
         next_url = request.args.get('next', '')
         if current_user.is_authenticated:
             return redirect(local_url(next_url))
-        return render_template('login.html', title='Login')
+        admin = User.query.filter_by(user=DEFAULT_ADMIN).first()
+        return render_template('login.html', title='Login',
+                               default_password_active=bool(admin and is_default_password(admin.password)))
         
     # login code goes here
     username = request.form.get('user')
@@ -321,13 +353,38 @@ def login():
     user = check_credentials(username, password)
     if not user:
         logger.warning(f'Incorrect login for user {username}')
-        return redirect(url_for('auth.login')) # if the user doesn't exist or password is wrong, reload the page
+        return redirect(url_for('auth.login', failed=1, next=next_url or None))
 
     # if the above check passes, then we know the user has the right credentials
     logger.info(f'Sucessfull login for user {username}')
     login_user(user, remember=remember)
 
+    if password == DEFAULT_PASSWORD:
+        return redirect(url_for('auth.change_password', next=next_url or None))
     return redirect(local_url(next_url))
+
+@auth_blueprint.route('/password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    next_url = request.values.get('next', '')
+    forced = is_default_password(current_user.password)
+    error = None
+    if request.method == 'POST':
+        new_password = request.form.get('password', '')
+        valid, error = validate_password(new_password)
+        if new_password != request.form.get('confirm'):
+            error = 'The passwords do not match.'
+        elif new_password == DEFAULT_PASSWORD:
+            error = 'Choose a password other than the default one.'
+        elif valid:
+            user = current_user._get_current_object()
+            user.password = generate_password_hash(new_password, method='scrypt')
+            db.session.commit()
+            # User.get_id() carries a hash fragment, so the session (and any remember cookie) is reissued.
+            login_user(user, remember=COOKIE_NAME in request.cookies)
+            logger.info(f'Password changed for user {user.user}')
+            return redirect(local_url(next_url))
+    return render_template('password.html', title='Change password', forced=forced, next=next_url, error=error)
 
 @auth_blueprint.route('/profile')
 @login_required

@@ -2,40 +2,21 @@
 {% block content %}
 {% include 'nav.html' %}
 
-<div class="container-fluid setting-body">
-    <div class="row g-0">
-        <nav class="settings-sidebar bg-body-tertiary border-end">
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link{% if request.path == '/admin/settings' %} active{% endif %}" href="/admin/settings">
-                        Settings
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link{% if request.path.startswith('/admin/services') %} active{% endif %}" href="/admin/services">
-                        Services
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link{% if request.path.startswith('/admin/files') %} active{% endif %}" href="/admin/files">
-                        Files
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link{% if request.path.startswith('/admin/tasks') %} active{% endif %}" href="/admin/tasks">
-                        Tasks
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link{% if request.path.startswith('/admin/stats') %} active{% endif %}" href="/admin/stats">
-                        Stats
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        <div class="col settings-panel">
-            {% block panel %}{% endblock %}
-        </div>
+{% set admin_pages = [('/admin/settings', 'Settings', 'bi-sliders'), ('/admin/services', 'Services', 'bi-broadcast'),
+                      ('/admin/files', 'Files', 'bi-folder2'), ('/admin/tasks', 'Tasks', 'bi-list-check'),
+                      ('/admin/stats', 'Stats', 'bi-bar-chart')] %}
+<div class="setting-body">
+    <nav class="settings-sidebar" aria-label="Admin">
+        {# subnav: a page's index of its own sections, under the Settings link. #}
+        <ul class="adm-nav">
+            {% for href, label, icon in admin_pages %}
+            <li><a href="{{ href }}"{% if request.path.startswith(href) %} class="active" aria-current="page"{% endif %}>
+                <i class="bi {{ icon }}" aria-hidden="true"></i>{{ label }}</a>{% if loop.first %}{% block subnav %}{% endblock %}{% endif %}</li>
+            {% endfor %}
+        </ul>
+    </nav>
+    <div class="settings-panel">
+        {% block panel %}{% endblock %}
     </div>
 </div>
 

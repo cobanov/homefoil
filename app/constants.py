@@ -76,7 +76,7 @@ DEFAULT_SETTINGS = {
         "enabled": True,
     },
     "shop": {
-        "name": "Ownfoil",
+        "name": "Homefoil",
         "host": "",
         "public": False,
         "motd": "Welcome to your own shop!",

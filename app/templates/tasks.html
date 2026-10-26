@@ -1,38 +1,47 @@
 {% extends "settings_layout.html" %}
 {% block panel %}
-<div class="settings-container container mt-3">
+<div class="settings-container adm-page">
+    <header class="adm-head">
+        <h1>Tasks</h1>
+        <p>Background work, live as it happens.</p>
+    </header>
 
-    <h2>Tasks</h2>
-    <p class="text-secondary">Live view of the background work queue. Updates stream from
-        the server as tasks progress.</p>
+    <div class="adm-cards">
+        <section class="adm-card" aria-labelledby="queueTitle">
+            <h2 id="queueTitle" class="adm-section-title pb-3">Queue</h2>
+            <div class="task-scroll">
+                <ul id="queueTasks" class="task-list"></ul>
+            </div>
+            <p id="queueEmpty" class="text-secondary mb-0">Nothing queued.</p>
+            <p id="queueTruncated" class="text-secondary mb-0 d-none">
+                Showing the {{ max_tasks }} oldest tasks; more are queued behind them.</p>
+        </section>
 
-    <h4 class="mt-4 mb-3">Queue</h4>
-    <div class="task-scroll">
-        <ul id="queueTasks" class="task-list"></ul>
+        <section class="adm-card" aria-labelledby="scheduledTitle">
+            <h2 id="scheduledTitle" class="adm-section-title pb-3">Scheduled</h2>
+            <ul id="scheduledTasks" class="task-list"></ul>
+            <p id="scheduledEmpty" class="text-secondary mb-0">Nothing scheduled.</p>
+        </section>
+
+        <section class="adm-card" aria-labelledby="failedTitle">
+            <div class="task-section-head pb-3">
+                <h2 id="failedTitle" class="adm-section-title">Failed</h2>
+                <button type="button" id="purgeFailed" class="icon-btn ms-auto d-none"
+                        onClick="purgeFailed()" title="Dismiss all failed tasks" aria-label="Dismiss all failed tasks">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+            <div class="task-scroll">
+                <ul id="failedTasks" class="task-list"></ul>
+            </div>
+            <p id="failedEmpty" class="text-secondary mb-0">No failures.</p>
+        </section>
+
+        <section class="adm-card" aria-labelledby="workersTitle">
+            <h2 id="workersTitle" class="adm-section-title pb-3">Workers</h2>
+            <div id="workerCards" class="row g-3"></div>
+        </section>
     </div>
-    <p id="queueEmpty" class="text-secondary fst-italic">Nothing queued.</p>
-    <p id="queueTruncated" class="text-secondary fst-italic d-none">
-        Showing the {{ max_tasks }} oldest tasks — more are queued behind them.</p>
-
-    <h4 class="mt-4 mb-3">Scheduled</h4>
-    <ul id="scheduledTasks" class="task-list"></ul>
-    <p id="scheduledEmpty" class="text-secondary fst-italic">Nothing scheduled.</p>
-
-    <div class="task-section-head mt-4 mb-3">
-        <h4 class="mb-0">Failed</h4>
-        <button type="button" id="purgeFailed" class="icon-btn ms-auto d-none"
-                onClick="purgeFailed()" title="Dismiss all failed tasks">
-            <i class="bi bi-trash"></i>
-        </button>
-    </div>
-    <div class="task-scroll">
-        <ul id="failedTasks" class="task-list"></ul>
-    </div>
-    <p id="failedEmpty" class="text-secondary fst-italic">No failures.</p>
-
-    <hr class="hr-settings">
-    <h2 class="pb-2">Workers</h2>
-    <div id="workerCards" class="row g-3"></div>
 
 </div>
 {% endblock %}
