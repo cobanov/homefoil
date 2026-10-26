@@ -6,9 +6,11 @@
 
 <style>
     /* Hero */
+    /* Tall enough for the art to lead, short enough that the library starts above the fold. */
     .sx-hero {
         position: relative;
-        height: clamp(460px, 76vh, 760px);
+        min-height: clamp(400px, 54vh, 580px);
+        padding-top: 88px;
         display: flex;
         align-items: flex-end;
         isolation: isolate;
@@ -41,7 +43,7 @@
     }
     .sx-hero-inner {
         width: 100%;
-        padding: 0 var(--sx-gutter) clamp(28px, 6vh, 64px);
+        padding: 0 var(--sx-gutter) clamp(24px, 4vh, 44px);
         display: flex;
         align-items: flex-end;
         justify-content: space-between;
@@ -56,16 +58,16 @@
     }
     .sx-hero-title {
         margin: 0;
-        font-size: clamp(34px, 5.2vw, 68px);
+        font-size: clamp(32px, 4.4vw, 56px);
         font-weight: 800;
         line-height: .98;
         letter-spacing: -.01em;
         text-wrap: balance;
     }
     .sx-hero-intro {
-        margin: 18px 0 0;
+        margin: 14px 0 0;
         max-width: 52ch;
-        font-size: 18px;
+        font-size: 17px;
         line-height: 1.45;
         color: rgba(241, 241, 238, .86);
     }
@@ -73,7 +75,7 @@
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        margin: 22px 0 0;
+        margin: 16px 0 0;
         padding: 0;
         list-style: none;
     }
@@ -86,7 +88,7 @@
         color: rgba(241, 241, 238, .9);
         backdrop-filter: blur(6px);
     }
-    .sx-hero-actions { margin-top: 28px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .sx-hero-actions { margin-top: 22px; display: flex; gap: 12px; flex-wrap: wrap; }
 
     /* Picks: swap the hero between a handful of games */
     .sx-picks {
@@ -274,14 +276,14 @@
 
 
     @media (max-width: 900px) {
-        .sx-hero { height: auto; min-height: 560px; padding-top: 96px; }
+        .sx-hero { min-height: 0; }
         .sx-hero-inner { flex-direction: column; align-items: flex-start; gap: 28px; }
         .sx-hero::after {
             background: linear-gradient(0deg, var(--sx-console) 8%, rgba(28, 29, 33, .78) 55%, rgba(28, 29, 33, .25) 100%);
         }
         .sx-picks { overflow-x: auto; max-width: 100%; scrollbar-width: none; }
         .sx-pick { width: 60px; height: 60px; flex-shrink: 0; }
-        .sx-hero-intro { font-size: 16px; }
+        .sx-hero-intro { font-size: 16px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
         .sx-tools { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "search sort" "chips chips"; }
         /* One swipeable row on touch screens; on a desktop the chips wrap, so a mouse reaches them all. */
         .sx-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
@@ -289,6 +291,11 @@
         .sx-hero-copy { max-width: 100%; }
         .sx-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 26px 16px; }
         .sx-library-title { font-size: 28px; }
+    }
+
+    /* On a phone the facts are a tap away on the game page; the hero keeps name, line and buttons. */
+    @media (max-width: 600px) {
+        .sx-hero-facts { display: none; }
     }
 
     @media (prefers-reduced-motion: reduce) {
